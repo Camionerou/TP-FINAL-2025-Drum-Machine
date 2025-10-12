@@ -323,95 +323,98 @@ class LEDMatrix:
     
     def draw_bpm_view(self, bpm):
         """
-        Vista BPM: Tempo simple y grande
-        Formato:  145
-                  BPM
+        Vista BPM: Todo horizontal
+        Formato: BPM 145
         
         Args:
             bpm: Tempo actual (60-200)
         """
         self.clear()
         
-        # Número BPM grande y centrado en filas 1-5
-        self._draw_number(bpm, 8, 1)
-        
-        # Texto "BPM" centrado en fila 7
-        # B
-        self.set_pixel(11, 7, True)
-        self.set_pixel(12, 7, True)
+        # Todo centrado verticalmente en fila 3-4 (medio de la matriz)
+        # Texto "BPM" a la izquierda
+        # B (pequeño)
+        self.set_pixel(4, 3, True)
+        self.set_pixel(4, 4, True)
+        self.set_pixel(5, 3, True)
         # P
-        self.set_pixel(14, 7, True)
-        self.set_pixel(15, 7, True)
+        self.set_pixel(7, 3, True)
+        self.set_pixel(7, 4, True)
         # M
-        self.set_pixel(17, 7, True)
-        self.set_pixel(18, 7, True)
-        self.set_pixel(19, 7, True)
+        self.set_pixel(9, 3, True)
+        self.set_pixel(10, 3, True)
+        
+        # Número BPM a la derecha (fuente 3x5)
+        self._draw_number(bpm, 13, 2)
         
         self.update()
     
     def draw_swing_view(self, swing):
         """
-        Vista SWING: Swing simple y grande
-        Formato:  35
-                  SWG
+        Vista SWING: Todo horizontal
+        Formato: SWG 35
         
         Args:
             swing: Porcentaje de swing (0-75)
         """
         self.clear()
         
-        # Número SWING grande y centrado
-        self._draw_number(swing, 10, 1)
-        
-        # Texto "SWG"
+        # Texto "SWG" a la izquierda
         # S
-        self.set_pixel(11, 7, True)
-        self.set_pixel(12, 7, True)
+        self.set_pixel(4, 3, True)
+        self.set_pixel(5, 3, True)
+        self.set_pixel(5, 4, True)
         # W
-        self.set_pixel(14, 7, True)
-        self.set_pixel(15, 7, True)
-        self.set_pixel(16, 7, True)
+        self.set_pixel(7, 3, True)
+        self.set_pixel(8, 4, True)
+        self.set_pixel(9, 3, True)
         # G
-        self.set_pixel(18, 7, True)
-        self.set_pixel(19, 7, True)
+        self.set_pixel(11, 3, True)
+        self.set_pixel(11, 4, True)
+        self.set_pixel(12, 3, True)
+        
+        # Número SWING a la derecha
+        self._draw_number(swing, 15, 2)
         
         self.update()
     
     def draw_volume_view(self, volume):
         """
-        Vista VOLUME: Volumen master simple
-        Formato:  87
-                  VOL
+        Vista VOLUME: Todo horizontal
+        Formato: VOL 87
         
         Args:
             volume: Volumen master (0-100)
         """
         self.clear()
         
-        # Número VOLUME grande y centrado
-        self._draw_number(volume, 10, 1)
-        
-        # Texto "VOL"
+        # Texto "VOL" a la izquierda
         # V
-        self.set_pixel(11, 7, True)
-        self.set_pixel(12, 7, True)
-        self.set_pixel(13, 7, True)
+        self.set_pixel(4, 3, True)
+        self.set_pixel(5, 4, True)
+        self.set_pixel(6, 3, True)
         # O
-        self.set_pixel(15, 7, True)
-        self.set_pixel(16, 7, True)
+        self.set_pixel(8, 3, True)
+        self.set_pixel(9, 3, True)
+        self.set_pixel(8, 4, True)
+        self.set_pixel(9, 4, True)
         # L
-        self.set_pixel(18, 7, True)
-        self.set_pixel(19, 7, True)
+        self.set_pixel(11, 3, True)
+        self.set_pixel(11, 4, True)
+        self.set_pixel(12, 4, True)
+        
+        # Número VOL a la derecha
+        self._draw_number(volume, 15, 2)
         
         self.update()
     
     def draw_volumes_view(self, volumes):
         """
-        Vista VOLUMES: Todo horizontal en filas separadas
-        Formato: DR ████████
+        Vista VOLUMES: Barras arriba, texto abajo
+        Formato: ████████
                  HH ██████
                  TM █████
-                 CY ███████
+                 DR ███████
         
         Args:
             volumes: Dict con 'drums', 'hats', 'toms', 'cyms' (0.0-1.0)
@@ -423,127 +426,124 @@ class LEDMatrix:
         toms = volumes.get('toms', 0.5)
         cyms = volumes.get('cyms', 0.5)
         
-        # Fila 1: DRUMS
-        # Label "DR"
-        self.set_pixel(0, 1, True)
-        self.set_pixel(1, 1, True)  # D
-        self.set_pixel(3, 1, True)
-        self.set_pixel(4, 1, True)  # R
-        # Barra (26 LEDs disponibles después del label)
+        # Fila 1: DRUMS - Barra arriba, label abajo
         drums_leds = int(drums * 26)
         for x in range(drums_leds):
-            self.set_pixel(6 + x, 1, True)
+            self.set_pixel(6 + x, 0, True)
+        # Label "DR" abajo
+        self.set_pixel(0, 1, True)
+        self.set_pixel(1, 1, True)
+        self.set_pixel(3, 1, True)
+        self.set_pixel(4, 1, True)
         
         # Fila 3: HATS
-        # Label "HH"
-        self.set_pixel(0, 3, True)
-        self.set_pixel(1, 3, True)  # H
-        self.set_pixel(3, 3, True)
-        self.set_pixel(4, 3, True)  # H
-        # Barra
         hats_leds = int(hats * 26)
         for x in range(hats_leds):
-            self.set_pixel(6 + x, 3, True)
+            self.set_pixel(6 + x, 2, True)
+        # Label "HH"
+        self.set_pixel(0, 3, True)
+        self.set_pixel(1, 3, True)
+        self.set_pixel(3, 3, True)
+        self.set_pixel(4, 3, True)
         
         # Fila 5: TOMS
-        # Label "TM"
-        self.set_pixel(0, 5, True)
-        self.set_pixel(1, 5, True)  # T
-        self.set_pixel(3, 5, True)
-        self.set_pixel(4, 5, True)  # M
-        # Barra
         toms_leds = int(toms * 26)
         for x in range(toms_leds):
-            self.set_pixel(6 + x, 5, True)
+            self.set_pixel(6 + x, 4, True)
+        # Label "TM"
+        self.set_pixel(0, 5, True)
+        self.set_pixel(1, 5, True)
+        self.set_pixel(3, 5, True)
+        self.set_pixel(4, 5, True)
         
         # Fila 7: CYMBALS
-        # Label "CY"
-        self.set_pixel(0, 7, True)
-        self.set_pixel(1, 7, True)  # C
-        self.set_pixel(3, 7, True)
-        self.set_pixel(4, 7, True)  # Y
-        # Barra
         cyms_leds = int(cyms * 26)
         for x in range(cyms_leds):
-            self.set_pixel(6 + x, 7, True)
+            self.set_pixel(6 + x, 6, True)
+        # Label "CY"
+        self.set_pixel(0, 7, True)
+        self.set_pixel(1, 7, True)
+        self.set_pixel(3, 7, True)
+        self.set_pixel(4, 7, True)
         
         self.update()
     
     def draw_pattern_view(self, pattern_num, bpm, steps):
         """
-        Vista PATTERN: Info detallada del patrón
-        Formato: PAT  3/8
-                 145  32
+        Vista PATTERN: Todo horizontal
+        Formato: PAT 3
         
         Args:
             pattern_num: Número de patrón (1-8)
-            bpm: Tempo actual
-            steps: Número de pasos
+            bpm: Tempo actual (no se muestra por espacio)
+            steps: Número de pasos (no se muestra por espacio)
         """
         self.clear()
         
-        # Línea superior (fila 0): "PAT  3/8"
+        # Todo horizontal centrado
+        # Texto "PAT"
         # P
-        self.set_pixel(2, 0, True)
-        self.set_pixel(3, 0, True)
+        self.set_pixel(6, 3, True)
+        self.set_pixel(6, 4, True)
+        self.set_pixel(7, 3, True)
         # A
-        self.set_pixel(5, 0, True)
-        self.set_pixel(6, 0, True)
+        self.set_pixel(9, 3, True)
+        self.set_pixel(9, 4, True)
+        self.set_pixel(10, 3, True)
+        self.set_pixel(10, 4, True)
         # T
-        self.set_pixel(8, 0, True)
-        self.set_pixel(9, 0, True)
+        self.set_pixel(12, 3, True)
+        self.set_pixel(13, 3, True)
+        self.set_pixel(12, 4, True)
         
-        # Patrón: "3/8"
-        self._draw_number(pattern_num, 14, 0)
-        self.set_pixel(17, 2, True)  # "/"
-        self._draw_number(8, 18, 0)
-        
-        # Línea inferior: BPM y STEPS con números grandes
-        # BPM (número grande centrado izquierda)
-        self._draw_number(bpm, 2, 3)
-        
-        # STEPS (número grande centrado derecha)
-        self._draw_number(steps, 22, 3)
+        # Número de patrón grande
+        self._draw_number(pattern_num, 16, 2)
         
         self.update()
     
     def draw_save_view(self, pattern_num):
         """
-        Vista SAVE: Confirmación simple
-        Formato: SAVED  3  ✓
+        Vista SAVE: Todo horizontal
+        Formato: SAVED P3 ✓
         
         Args:
             pattern_num: Número de patrón guardado
         """
         self.clear()
         
-        # Texto "SAVED" pequeño en fila 0
+        # Todo horizontal centrado
+        # Texto "SAVED"
         # S
-        self.set_pixel(6, 0, True)
-        self.set_pixel(7, 0, True)
+        self.set_pixel(2, 3, True)
+        self.set_pixel(3, 3, True)
+        self.set_pixel(3, 4, True)
         # A
-        self.set_pixel(9, 0, True)
-        self.set_pixel(10, 0, True)
+        self.set_pixel(5, 3, True)
+        self.set_pixel(5, 4, True)
         # V
-        self.set_pixel(12, 0, True)
-        self.set_pixel(13, 0, True)
+        self.set_pixel(7, 3, True)
+        self.set_pixel(8, 4, True)
+        self.set_pixel(9, 3, True)
         # E
-        self.set_pixel(15, 0, True)
-        self.set_pixel(16, 0, True)
+        self.set_pixel(11, 3, True)
+        self.set_pixel(11, 4, True)
         # D
-        self.set_pixel(18, 0, True)
-        self.set_pixel(19, 0, True)
+        self.set_pixel(13, 3, True)
+        self.set_pixel(13, 4, True)
+        self.set_pixel(14, 3, True)
         
-        # Número de patrón grande en centro
-        self._draw_number(pattern_num, 12, 2)
+        # "P"
+        self.set_pixel(17, 3, True)
+        self.set_pixel(17, 4, True)
         
-        # Checkmark ✓ en la derecha
-        self.set_pixel(24, 4, True)
-        self.set_pixel(25, 5, True)
-        self.set_pixel(26, 6, True)
-        self.set_pixel(27, 5, True)
-        self.set_pixel(28, 4, True)
-        self.set_pixel(29, 3, True)
+        # Número de patrón
+        self._draw_number(pattern_num, 19, 2)
+        
+        # Checkmark ✓
+        self.set_pixel(25, 4, True)
+        self.set_pixel(26, 5, True)
+        self.set_pixel(27, 3, True)
+        self.set_pixel(28, 2, True)
         
         self.update()
     
