@@ -408,63 +408,30 @@ class LEDMatrix:
         
         self.update()
     
-    def draw_volumes_view(self, volumes):
+    def draw_vol_group_view(self, group_name, volume):
         """
-        Vista VOLUMES: Barras arriba, texto abajo
-        Formato: ████████
-                 HH ██████
-                 TM █████
-                 DR ███████
+        Vista de volumen grupal: Label + número
+        Formato: DR 90
         
         Args:
-            volumes: Dict con 'drums', 'hats', 'toms', 'cyms' (0.0-1.0)
+            group_name: Nombre del grupo ('DR', 'HH', 'TM', 'CY')
+            volume: Volumen (0.0-1.0)
         """
         self.clear()
         
-        drums = volumes.get('drums', 0.5)
-        hats = volumes.get('hats', 0.5)
-        toms = volumes.get('toms', 0.5)
-        cyms = volumes.get('cyms', 0.5)
+        # Convertir a porcentaje
+        vol_percent = int(volume * 100)
         
-        # Fila 1: DRUMS - Barra arriba, label abajo
-        drums_leds = int(drums * 26)
-        for x in range(drums_leds):
-            self.set_pixel(6 + x, 0, True)
-        # Label "DR" abajo
-        self.set_pixel(0, 1, True)
-        self.set_pixel(1, 1, True)
-        self.set_pixel(3, 1, True)
-        self.set_pixel(4, 1, True)
+        # Label a la izquierda (centrado verticalmente)
+        # Primera letra
+        self.set_pixel(6, 3, True)
+        self.set_pixel(6, 4, True)
+        # Segunda letra
+        self.set_pixel(8, 3, True)
+        self.set_pixel(8, 4, True)
         
-        # Fila 3: HATS
-        hats_leds = int(hats * 26)
-        for x in range(hats_leds):
-            self.set_pixel(6 + x, 2, True)
-        # Label "HH"
-        self.set_pixel(0, 3, True)
-        self.set_pixel(1, 3, True)
-        self.set_pixel(3, 3, True)
-        self.set_pixel(4, 3, True)
-        
-        # Fila 5: TOMS
-        toms_leds = int(toms * 26)
-        for x in range(toms_leds):
-            self.set_pixel(6 + x, 4, True)
-        # Label "TM"
-        self.set_pixel(0, 5, True)
-        self.set_pixel(1, 5, True)
-        self.set_pixel(3, 5, True)
-        self.set_pixel(4, 5, True)
-        
-        # Fila 7: CYMBALS
-        cyms_leds = int(cyms * 26)
-        for x in range(cyms_leds):
-            self.set_pixel(6 + x, 6, True)
-        # Label "CY"
-        self.set_pixel(0, 7, True)
-        self.set_pixel(1, 7, True)
-        self.set_pixel(3, 7, True)
-        self.set_pixel(4, 7, True)
+        # Número grande a la derecha
+        self._draw_number(vol_percent, 12, 2)
         
         self.update()
     

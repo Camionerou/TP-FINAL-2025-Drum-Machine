@@ -13,7 +13,10 @@ class ViewType(Enum):
     BPM = "bpm"            # Vista de tempo
     SWING = "swing"        # Vista de swing
     VOLUME = "volume"      # Vista de volumen master
-    VOLUMES = "volumes"    # Volúmenes grupales con barras
+    VOL_DRUMS = "vol_drums"   # Vista volumen Drums
+    VOL_HATS = "vol_hats"     # Vista volumen Hats
+    VOL_TOMS = "vol_toms"     # Vista volumen Toms
+    VOL_CYMS = "vol_cyms"     # Vista volumen Cymbals
     PATTERN = "pattern"    # Info detallada de patrón
     SAVE = "save"         # Confirmación de guardado
 
@@ -155,10 +158,25 @@ class ViewManager:
             volume = self.view_data.get('volume', 80)
             led_matrix.draw_volume_view(volume)
         
-        elif self.current_view == ViewType.VOLUMES:
-            # Vista de volúmenes grupales
-            volumes = self.view_data.get('volumes', {})
-            led_matrix.draw_volumes_view(volumes)
+        elif self.current_view == ViewType.VOL_DRUMS:
+            # Vista volumen Drums
+            volume = self.view_data.get('volume', 80)
+            led_matrix.draw_vol_group_view('DR', volume)
+        
+        elif self.current_view == ViewType.VOL_HATS:
+            # Vista volumen Hats
+            volume = self.view_data.get('volume', 80)
+            led_matrix.draw_vol_group_view('HH', volume)
+        
+        elif self.current_view == ViewType.VOL_TOMS:
+            # Vista volumen Toms
+            volume = self.view_data.get('volume', 80)
+            led_matrix.draw_vol_group_view('TM', volume)
+        
+        elif self.current_view == ViewType.VOL_CYMS:
+            # Vista volumen Cymbals
+            volume = self.view_data.get('volume', 80)
+            led_matrix.draw_vol_group_view('CY', volume)
         
         elif self.current_view == ViewType.PATTERN:
             # Vista detallada de patrón

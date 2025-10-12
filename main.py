@@ -402,9 +402,6 @@ class DrumMachine:
                 {'volume': int(master_vol * 100)}
             )
         
-        # Detectar cambios en volúmenes grupales para trigger vista VOLUMES
-        volumes_changed = False
-        
         # POT_VOL_DRUMS (4): Kick + Snare
         drums_vol = values[POT_VOL_DRUMS]
         old_drums = self.prev_pot_values.get(POT_VOL_DRUMS, drums_vol)
@@ -412,7 +409,11 @@ class DrumMachine:
             self.audio_engine.set_instrument_volume(0, drums_vol)  # Kick
             self.audio_engine.set_instrument_volume(1, drums_vol)  # Snare
             self.prev_pot_values[POT_VOL_DRUMS] = drums_vol
-            volumes_changed = True
+            # Trigger vista VOL_DRUMS
+            self.view_manager.show_view(
+                ViewType.VOL_DRUMS,
+                {'volume': drums_vol}
+            )
         
         # POT_VOL_HATS (5): CHH + OHH
         hats_vol = values[POT_VOL_HATS]
@@ -421,7 +422,11 @@ class DrumMachine:
             self.audio_engine.set_instrument_volume(2, hats_vol)  # CHH
             self.audio_engine.set_instrument_volume(3, hats_vol)  # OHH
             self.prev_pot_values[POT_VOL_HATS] = hats_vol
-            volumes_changed = True
+            # Trigger vista VOL_HATS
+            self.view_manager.show_view(
+                ViewType.VOL_HATS,
+                {'volume': hats_vol}
+            )
         
         # POT_VOL_TOMS (6): Tom1 + Tom2
         toms_vol = values[POT_VOL_TOMS]
@@ -430,7 +435,11 @@ class DrumMachine:
             self.audio_engine.set_instrument_volume(4, toms_vol)  # Tom1
             self.audio_engine.set_instrument_volume(5, toms_vol)  # Tom2
             self.prev_pot_values[POT_VOL_TOMS] = toms_vol
-            volumes_changed = True
+            # Trigger vista VOL_TOMS
+            self.view_manager.show_view(
+                ViewType.VOL_TOMS,
+                {'volume': toms_vol}
+            )
         
         # POT_VOL_CYMS (7): Crash + Ride
         cyms_vol = values[POT_VOL_CYMS]
@@ -439,18 +448,10 @@ class DrumMachine:
             self.audio_engine.set_instrument_volume(6, cyms_vol)  # Crash
             self.audio_engine.set_instrument_volume(7, cyms_vol)  # Ride
             self.prev_pot_values[POT_VOL_CYMS] = cyms_vol
-            volumes_changed = True
-        
-        # Si cambió algún volumen, mostrar vista VOLUMES
-        if volumes_changed:
+            # Trigger vista VOL_CYMS
             self.view_manager.show_view(
-                ViewType.VOLUMES,
-                {
-                    'drums': values[POT_VOL_DRUMS],
-                    'hats': values[POT_VOL_HATS],
-                    'toms': values[POT_VOL_TOMS],
-                    'cyms': values[POT_VOL_CYMS]
-                }
+                ViewType.VOL_CYMS,
+                {'volume': cyms_vol}
             )
     
     # ===== LOOP PRINCIPAL =====
