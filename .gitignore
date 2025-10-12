@@ -16,9 +16,9 @@ ENV/
 *.swo
 *~
 
-# Samples (pueden ser archivos grandes)
-samples/*.wav
-samples/*.mp3
+# Samples - ahora incluidos en el repo para fácil instalación
+# samples/*.wav
+# samples/*.mp3
 
 # Patrones guardados
 patterns/*.json
