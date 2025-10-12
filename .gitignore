@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Samples (pueden ser archivos grandes)
+samples/*.wav
+samples/*.mp3
+
+# Patrones guardados
+patterns/*.json
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+

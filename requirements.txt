@@ -1,0 +1,12 @@
+# Raspberry Pi Drum Machine - Dependencias
+
+# Audio
+pygame==2.5.2
+
+# GPIO y SPI
+RPi.GPIO==0.7.1
+spidev==3.6
+
+# Utilidades
+numpy==1.24.3
+
