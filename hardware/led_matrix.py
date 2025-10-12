@@ -122,6 +122,9 @@ class LEDMatrix:
         if x < 0 or x >= self.width or y < 0 or y >= 8:
             return
         
+        # INVERTIR eje X para corregir espejado
+        x = (self.width - 1) - x
+        
         # Determinar dispositivo y posición local
         device_id = x // 8
         local_x = x % 8
@@ -136,6 +139,9 @@ class LEDMatrix:
         """Obtener estado de un pixel"""
         if x < 0 or x >= self.width or y < 0 or y >= 8:
             return False
+        
+        # INVERTIR eje X para corregir espejado
+        x = (self.width - 1) - x
         
         device_id = x // 8
         local_x = x % 8
@@ -401,9 +407,11 @@ class LEDMatrix:
     
     def draw_volumes_view(self, volumes):
         """
-        Vista VOLUMES: 4 cuadrantes simples con barras horizontales
-        Formato: DR  HH  TM  CY  (fila 0)
-                 ██  ███ ██  ████ (fila 7)
+        Vista VOLUMES: Todo horizontal en filas separadas
+        Formato: DR ████████
+                 HH ██████
+                 TM █████
+                 CY ███████
         
         Args:
             volumes: Dict con 'drums', 'hats', 'toms', 'cyms' (0.0-1.0)
@@ -415,53 +423,49 @@ class LEDMatrix:
         toms = volumes.get('toms', 0.5)
         cyms = volumes.get('cyms', 0.5)
         
-        # Cuadrante 1: DRUMS (columnas 0-7)
-        # Label "DR" en fila 0
-        self.set_pixel(2, 0, True)
-        self.set_pixel(3, 0, True)  # D
-        self.set_pixel(5, 0, True)
-        self.set_pixel(6, 0, True)  # R
-        
-        # Barra horizontal en fila 7
-        drums_leds = int(drums * 8)
+        # Fila 1: DRUMS
+        # Label "DR"
+        self.set_pixel(0, 1, True)
+        self.set_pixel(1, 1, True)  # D
+        self.set_pixel(3, 1, True)
+        self.set_pixel(4, 1, True)  # R
+        # Barra (26 LEDs disponibles después del label)
+        drums_leds = int(drums * 26)
         for x in range(drums_leds):
-            self.set_pixel(x, 7, True)
+            self.set_pixel(6 + x, 1, True)
         
-        # Cuadrante 2: HATS (columnas 8-15)
-        # Label "HH" en fila 0
-        self.set_pixel(10, 0, True)
-        self.set_pixel(11, 0, True)  # H
-        self.set_pixel(13, 0, True)
-        self.set_pixel(14, 0, True)  # H
-        
-        # Barra horizontal
-        hats_leds = int(hats * 8)
+        # Fila 3: HATS
+        # Label "HH"
+        self.set_pixel(0, 3, True)
+        self.set_pixel(1, 3, True)  # H
+        self.set_pixel(3, 3, True)
+        self.set_pixel(4, 3, True)  # H
+        # Barra
+        hats_leds = int(hats * 26)
         for x in range(hats_leds):
-            self.set_pixel(8 + x, 7, True)
+            self.set_pixel(6 + x, 3, True)
         
-        # Cuadrante 3: TOMS (columnas 16-23)
-        # Label "TM" en fila 0
-        self.set_pixel(18, 0, True)
-        self.set_pixel(19, 0, True)  # T
-        self.set_pixel(21, 0, True)
-        self.set_pixel(22, 0, True)  # M
-        
-        # Barra horizontal
-        toms_leds = int(toms * 8)
+        # Fila 5: TOMS
+        # Label "TM"
+        self.set_pixel(0, 5, True)
+        self.set_pixel(1, 5, True)  # T
+        self.set_pixel(3, 5, True)
+        self.set_pixel(4, 5, True)  # M
+        # Barra
+        toms_leds = int(toms * 26)
         for x in range(toms_leds):
-            self.set_pixel(16 + x, 7, True)
+            self.set_pixel(6 + x, 5, True)
         
-        # Cuadrante 4: CYMBALS (columnas 24-31)
-        # Label "CY" en fila 0
-        self.set_pixel(26, 0, True)
-        self.set_pixel(27, 0, True)  # C
-        self.set_pixel(29, 0, True)
-        self.set_pixel(30, 0, True)  # Y
-        
-        # Barra horizontal
-        cyms_leds = int(cyms * 8)
+        # Fila 7: CYMBALS
+        # Label "CY"
+        self.set_pixel(0, 7, True)
+        self.set_pixel(1, 7, True)  # C
+        self.set_pixel(3, 7, True)
+        self.set_pixel(4, 7, True)  # Y
+        # Barra
+        cyms_leds = int(cyms * 26)
         for x in range(cyms_leds):
-            self.set_pixel(24 + x, 7, True)
+            self.set_pixel(6 + x, 7, True)
         
         self.update()
     
