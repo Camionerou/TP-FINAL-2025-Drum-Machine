@@ -10,10 +10,12 @@ from enum import Enum
 class ViewType(Enum):
     """Tipos de vistas disponibles"""
     SEQUENCER = "sequencer"
-    INFO = "info"           # BPM + SWING + VOL
-    VOLUMES = "volumes"     # Volúmenes grupales con barras
-    PATTERN = "pattern"     # Info detallada de patrón
-    SAVE = "save"          # Confirmación de guardado
+    BPM = "bpm"            # Vista de tempo
+    SWING = "swing"        # Vista de swing
+    VOLUME = "volume"      # Vista de volumen master
+    VOLUMES = "volumes"    # Volúmenes grupales con barras
+    PATTERN = "pattern"    # Info detallada de patrón
+    SAVE = "save"         # Confirmación de guardado
 
 
 class ViewManager:
@@ -138,12 +140,20 @@ class ViewManager:
             display_step = sequencer.current_step if sequencer.is_playing else selected_step
             led_matrix.draw_sequencer_grid(pattern, display_step)
         
-        elif self.current_view == ViewType.INFO:
-            # Vista INFO: BPM + SWING + VOL
+        elif self.current_view == ViewType.BPM:
+            # Vista BPM
             bpm = self.view_data.get('bpm', 120)
+            led_matrix.draw_bpm_view(bpm)
+        
+        elif self.current_view == ViewType.SWING:
+            # Vista SWING
             swing = self.view_data.get('swing', 0)
+            led_matrix.draw_swing_view(swing)
+        
+        elif self.current_view == ViewType.VOLUME:
+            # Vista VOLUME (master)
             volume = self.view_data.get('volume', 80)
-            led_matrix.draw_info_view(bpm, swing, volume)
+            led_matrix.draw_volume_view(volume)
         
         elif self.current_view == ViewType.VOLUMES:
             # Vista de volúmenes grupales

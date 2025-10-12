@@ -362,44 +362,44 @@ class DrumMachine:
         
         # POT_SCROLL (0): Seleccionar paso (0-31)
         scroll_value = values[POT_SCROLL]
-        new_selected_step = int(scroll_value * (NUM_STEPS - 1))
+        new_selected_step = int(scroll_value * NUM_STEPS)
+        if new_selected_step >= NUM_STEPS:
+            new_selected_step = NUM_STEPS - 1
         if new_selected_step != self.selected_step:
             self.selected_step = new_selected_step
             self.view_manager.register_interaction()
-        
-        # Detectar cambios en BPM, SWING o VOL para trigger vista INFO
-        info_changed = False
         
         # POT_TEMPO (1): BPM
         tempo_value = values[POT_TEMPO]
         new_bpm = int(BPM_MIN + tempo_value * (BPM_MAX - BPM_MIN))
         if abs(new_bpm - self.sequencer.bpm) > 2:
             self.sequencer.set_bpm(new_bpm)
-            info_changed = True
+            # Trigger vista BPM
+            self.view_manager.show_view(
+                ViewType.BPM,
+                {'bpm': new_bpm}
+            )
         
         # POT_SWING (2): Swing
         swing_value = values[POT_SWING]
         new_swing = int(swing_value * 75)
         if abs(new_swing - self.sequencer.swing) > 2:
             self.sequencer.set_swing(new_swing)
-            info_changed = True
+            # Trigger vista SWING
+            self.view_manager.show_view(
+                ViewType.SWING,
+                {'swing': new_swing}
+            )
         
         # POT_MASTER (3): Master Volume
         master_vol = values[POT_MASTER]
         old_master = self.audio_engine.master_volume
         if abs(master_vol - old_master) > 0.05:
             self.audio_engine.set_master_volume(master_vol)
-            info_changed = True
-        
-        # Si cambió algo en INFO, mostrar vista INFO
-        if info_changed:
+            # Trigger vista VOLUME
             self.view_manager.show_view(
-                ViewType.INFO,
-                {
-                    'bpm': self.sequencer.bpm,
-                    'swing': self.sequencer.swing,
-                    'volume': int(self.audio_engine.master_volume * 100)
-                }
+                ViewType.VOLUME,
+                {'volume': int(master_vol * 100)}
             )
         
         # Detectar cambios en volúmenes grupales para trigger vista VOLUMES
