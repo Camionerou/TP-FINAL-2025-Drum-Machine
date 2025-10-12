@@ -106,7 +106,7 @@ DEBOUNCE_TIME = 0.02     # 20ms debounce para botones
 
 # ===== SISTEMA DE VISTAS =====
 
-VIEW_TIMEOUT = 2.0       # Segundos antes de volver a vista SEQUENCER
+VIEW_TIMEOUT = 1.0       # Segundos antes de volver a vista SEQUENCER
 VIEW_INACTIVITY_TIMEOUT = 3.0  # Segundos de inactividad para forzar SEQUENCER
 ANIMATION_FPS = 10       # FPS para animaciones de vistas
 
