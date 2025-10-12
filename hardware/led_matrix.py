@@ -331,21 +331,27 @@ class LEDMatrix:
         """
         self.clear()
         
-        # Todo centrado verticalmente en fila 3-4 (medio de la matriz)
-        # Texto "BPM" a la izquierda
-        # B (pequeño)
-        self.set_pixel(4, 3, True)
-        self.set_pixel(4, 4, True)
-        self.set_pixel(5, 3, True)
+        # Texto "BPM" centrado verticalmente (filas 2-4)
+        # B
+        for y in range(2, 5):
+            self.set_pixel(2, y, True)
+        self.set_pixel(3, 2, True)
+        self.set_pixel(3, 3, True)
+        self.set_pixel(3, 4, True)
         # P
-        self.set_pixel(7, 3, True)
-        self.set_pixel(7, 4, True)
+        for y in range(2, 5):
+            self.set_pixel(5, y, True)
+        self.set_pixel(6, 2, True)
+        self.set_pixel(6, 3, True)
         # M
+        for y in range(2, 5):
+            self.set_pixel(8, y, True)
+            self.set_pixel(11, y, True)
         self.set_pixel(9, 3, True)
         self.set_pixel(10, 3, True)
         
-        # Número BPM a la derecha (fuente 3x5)
-        self._draw_number(bpm, 13, 2)
+        # Número BPM grande a la derecha
+        self._draw_number(bpm, 14, 2)
         
         self.update()
     
@@ -359,22 +365,26 @@ class LEDMatrix:
         """
         self.clear()
         
-        # Texto "SWG" a la izquierda
+        # Texto "SWG"
         # S
-        self.set_pixel(4, 3, True)
-        self.set_pixel(5, 3, True)
-        self.set_pixel(5, 4, True)
+        self.set_pixel(2, 2, True)
+        self.set_pixel(3, 2, True)
+        self.set_pixel(2, 3, True)
+        self.set_pixel(3, 4, True)
         # W
-        self.set_pixel(7, 3, True)
-        self.set_pixel(8, 4, True)
-        self.set_pixel(9, 3, True)
+        for y in range(2, 5):
+            self.set_pixel(5, y, True)
+            self.set_pixel(8, y, True)
+        self.set_pixel(6, 4, True)
+        self.set_pixel(7, 4, True)
         # G
-        self.set_pixel(11, 3, True)
+        for y in range(2, 5):
+            self.set_pixel(10, y, True)
+        self.set_pixel(11, 2, True)
         self.set_pixel(11, 4, True)
-        self.set_pixel(12, 3, True)
         
-        # Número SWING a la derecha
-        self._draw_number(swing, 15, 2)
+        # Número SWING
+        self._draw_number(swing, 14, 2)
         
         self.update()
     
@@ -388,30 +398,31 @@ class LEDMatrix:
         """
         self.clear()
         
-        # Texto "VOL" a la izquierda
+        # Texto "VOL"
         # V
-        self.set_pixel(4, 3, True)
-        self.set_pixel(5, 4, True)
-        self.set_pixel(6, 3, True)
+        self.set_pixel(2, 2, True)
+        self.set_pixel(3, 4, True)
+        self.set_pixel(4, 2, True)
         # O
-        self.set_pixel(8, 3, True)
-        self.set_pixel(9, 3, True)
-        self.set_pixel(8, 4, True)
-        self.set_pixel(9, 4, True)
+        for y in range(2, 5):
+            self.set_pixel(6, y, True)
+            self.set_pixel(8, y, True)
+        self.set_pixel(7, 2, True)
+        self.set_pixel(7, 4, True)
         # L
-        self.set_pixel(11, 3, True)
+        for y in range(2, 5):
+            self.set_pixel(10, y, True)
         self.set_pixel(11, 4, True)
-        self.set_pixel(12, 4, True)
         
-        # Número VOL a la derecha
-        self._draw_number(volume, 15, 2)
+        # Número VOL
+        self._draw_number(volume, 14, 2)
         
         self.update()
     
     def draw_vol_group_view(self, group_name, volume):
         """
         Vista de volumen grupal: Label + número
-        Formato: DR 90
+        Formato: DR 90 o HH 75 etc
         
         Args:
             group_name: Nombre del grupo ('DR', 'HH', 'TM', 'CY')
@@ -422,16 +433,63 @@ class LEDMatrix:
         # Convertir a porcentaje
         vol_percent = int(volume * 100)
         
-        # Label a la izquierda (centrado verticalmente)
-        # Primera letra
-        self.set_pixel(6, 3, True)
-        self.set_pixel(6, 4, True)
-        # Segunda letra
-        self.set_pixel(8, 3, True)
-        self.set_pixel(8, 4, True)
+        # Dibujar label según el grupo (centrado verticalmente filas 2-4)
+        if group_name == 'DR':
+            # D
+            for y in range(2, 5):
+                self.set_pixel(4, y, True)
+            self.set_pixel(5, 2, True)
+            self.set_pixel(5, 4, True)
+            self.set_pixel(6, 3, True)
+            # R
+            for y in range(2, 5):
+                self.set_pixel(8, y, True)
+            self.set_pixel(9, 2, True)
+            self.set_pixel(9, 3, True)
+        
+        elif group_name == 'HH':
+            # H
+            for y in range(2, 5):
+                self.set_pixel(4, y, True)
+                self.set_pixel(7, y, True)
+            self.set_pixel(5, 3, True)
+            self.set_pixel(6, 3, True)
+            # H
+            for y in range(2, 5):
+                self.set_pixel(9, y, True)
+                self.set_pixel(12, y, True)
+            self.set_pixel(10, 3, True)
+            self.set_pixel(11, 3, True)
+        
+        elif group_name == 'TM':
+            # T
+            self.set_pixel(4, 2, True)
+            self.set_pixel(5, 2, True)
+            self.set_pixel(6, 2, True)
+            for y in range(2, 5):
+                self.set_pixel(5, y, True)
+            # M
+            for y in range(2, 5):
+                self.set_pixel(8, y, True)
+                self.set_pixel(11, y, True)
+            self.set_pixel(9, 3, True)
+            self.set_pixel(10, 3, True)
+        
+        elif group_name == 'CY':
+            # C
+            for y in range(2, 5):
+                self.set_pixel(4, y, True)
+            self.set_pixel(5, 2, True)
+            self.set_pixel(5, 4, True)
+            # Y
+            self.set_pixel(7, 2, True)
+            self.set_pixel(9, 2, True)
+            self.set_pixel(8, 3, True)
+            for y in range(3, 5):
+                self.set_pixel(8, y, True)
         
         # Número grande a la derecha
-        self._draw_number(vol_percent, 12, 2)
+        self._draw_number(vol_percent, 14, 2)
         
         self.update()
     

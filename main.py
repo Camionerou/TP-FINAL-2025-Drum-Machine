@@ -46,7 +46,13 @@ class DrumMachine:
         self.solo_instrument = None
         
         # Valores anteriores de potenciómetros para detectar cambios
-        self.prev_pot_values = {}
+        # Inicializar con valores por defecto muy diferentes para forzar primera detección
+        self.prev_pot_values = {
+            POT_VOL_DRUMS: -1.0,
+            POT_VOL_HATS: -1.0,
+            POT_VOL_TOMS: -1.0,
+            POT_VOL_CYMS: -1.0
+        }
         
         print("\nInicializando componentes...")
         
