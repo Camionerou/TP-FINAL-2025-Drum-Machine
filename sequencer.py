@@ -1,5 +1,5 @@
 """
-Secuenciador de 16 pasos para la Drum Machine
+Secuenciador de 32 pasos para la Drum Machine
 Maneja patrones, reproducción y guardado/carga de patrones
 """
 
@@ -25,7 +25,7 @@ class Sequencer:
         """
         self.audio_engine = audio_engine
         
-        # Patrón actual: 16 pasos x 8 instrumentos
+        # Patrón actual: 32 pasos x 8 instrumentos
         self.pattern = [[False] * NUM_INSTRUMENTS for _ in range(NUM_STEPS)]
         
         # Estado de reproducción

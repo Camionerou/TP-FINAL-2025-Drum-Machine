@@ -44,7 +44,7 @@ AUDIO_CHANNELS = 8       # Permitir 8 sonidos simultáneos
 
 # ===== CONSTANTES DEL SECUENCIADOR =====
 
-NUM_STEPS = 16           # 16 pasos en el secuenciador
+NUM_STEPS = 32           # 32 pasos en el secuenciador (expandido)
 BPM_MIN = 60
 BPM_MAX = 200
 BPM_DEFAULT = 120
@@ -52,15 +52,15 @@ SWING_MAX = 75           # Swing máximo en porcentaje
 
 # ===== CONSTANTES DE POTENCIÓMETROS =====
 
-# Canales del MCP3008
-POT_TEMPO = 0
-POT_SWING = 1
-POT_MASTER_VOL = 2
-POT_KICK_VOL = 3
-POT_SNARE_VOL = 4
-POT_HIHATS_VOL = 5
-POT_TOMS_VOL = 6
-POT_CYMBALS_VOL = 7
+# Canales del MCP3008 (Sistema de vistas dinámicas)
+POT_SCROLL = 0          # Scroll entre pasos 0-31 (selecciona paso a editar)
+POT_TEMPO = 1           # BPM 60-200 → Trigger vista BPM
+POT_SWING = 2           # Swing 0-75% → Trigger vista SWING
+POT_MASTER = 3          # Volumen Master → Trigger vista VOLUMEN
+POT_VOL_DRUMS = 4       # Vol Kick + Snare (grupo ritmo)
+POT_VOL_HATS = 5        # Vol CHH + OHH (grupo hi-hats)
+POT_VOL_TOMS = 6        # Vol Tom1 + Tom2 (grupo toms)
+POT_VOL_CYMS = 7        # Vol Crash + Ride (grupo cymbals)
 
 # Configuración ADC
 ADC_MAX_VALUE = 1023
@@ -77,18 +77,21 @@ MAX7219_BRIGHTNESS = 3   # 0-15, ajustar según necesidad
 MODE_PAD = 0
 MODE_SEQUENCER = 1
 
-# ===== MAPEO DE BOTONES =====
+# ===== MAPEO DE BOTONES (Sistema mejorado) =====
 
-# Botones 0-7: Instrumentos/pads
-# Botones 8-15: Funciones de control
-BTN_PLAY_STOP = 8
-BTN_MODE = 9
-BTN_TEMPO_DOWN = 10
-BTN_TEMPO_UP = 11
-BTN_PATTERN = 12
-BTN_CLEAR = 13
-BTN_SAVE = 14
-BTN_STEP_SELECT = 15
+# Botones 0-7: Instrumentos/pads (función depende del modo)
+# En modo PAD: Tocan instrumento + trigger vista PAD
+# En modo SEQUENCER: Toggle nota en paso actual (POT_SCROLL)
+
+# Botones 8-15: Funciones inteligentes
+BTN_PLAY_STOP = 8       # Simple: Play/Stop | Doble: Reset a paso 0
+BTN_MODE = 9            # Simple: Cambiar modo | Hold 2s: Bloquear modo
+BTN_PATTERN_PREV = 10   # Simple: Patrón anterior | Hold: Rápido
+BTN_PATTERN_NEXT = 11   # Simple: Patrón siguiente | Hold: Rápido
+BTN_CLEAR = 12          # Simple: Clear paso | Doble: Clear instrumento | Hold 3s: Clear patrón
+BTN_SAVE = 13           # Simple: Guardar | Hold+11/12: Guardar en patrón específico
+BTN_COPY = 14           # Simple: Copiar paso | Hold+11/12: Pegar
+BTN_MUTE = 15           # Simple: Mute paso | Doble: Solo | Hold+1-8: Mute global
 
 # ===== RUTAS =====
 
@@ -100,6 +103,18 @@ MAX_PATTERNS = 8
 
 MAIN_LOOP_FPS = 60       # FPS del loop principal
 DEBOUNCE_TIME = 0.02     # 20ms debounce para botones
+
+# ===== SISTEMA DE VISTAS =====
+
+VIEW_TIMEOUT = 2.0       # Segundos antes de volver a vista SEQUENCER
+VIEW_INACTIVITY_TIMEOUT = 3.0  # Segundos de inactividad para forzar SEQUENCER
+ANIMATION_FPS = 10       # FPS para animaciones de vistas
+
+# ===== DETECCIÓN DE EVENTOS DE BOTONES =====
+
+DOUBLE_CLICK_TIME = 0.3  # Tiempo máximo entre clicks para doble-click
+HOLD_TIME = 0.8          # Tiempo mínimo para botón mantenido
+LONG_HOLD_TIME = 3.0     # Tiempo para hold largo (clear completo, etc)
 
 # ===== CONFIGURACIÓN DE VOLUMEN =====
 

@@ -164,31 +164,37 @@ class LEDMatrix:
                 data = self.buffer[device_id][row]
                 self._write_device(device_id, register, data)
     
-    def draw_sequencer_grid(self, pattern, current_step=-1):
+    def draw_sequencer_grid(self, pattern, current_step=-1, selected_step=-1):
         """
-        Dibujar grid del secuenciador (primeros 16 pasos en 2 bloques de 8x8)
+        Dibujar grid del secuenciador completo (32 pasos × 8 instrumentos)
         
         Args:
-            pattern: Array 16x8 con el patrón (True/False)
+            pattern: Array 32x8 con el patrón (True/False)
             current_step: Paso actual siendo reproducido (-1 si no está reproduciendo)
+            selected_step: Paso seleccionado para edición (POT_SCROLL)
         """
-        # Limpiar las primeras dos secciones (16 columnas)
-        for x in range(16):
-            for y in range(8):
-                self.set_pixel(x, y, False)
+        # Limpiar toda la matriz
+        self.clear()
         
-        # Dibujar patrón
-        for step in range(min(16, len(pattern))):
+        # Dibujar patrón completo (32 pasos)
+        for step in range(min(32, len(pattern))):
             for instrument in range(min(8, len(pattern[step]))):
                 if pattern[step][instrument]:
                     self.set_pixel(step, instrument, True)
         
-        # Destacar paso actual
-        if 0 <= current_step < 16:
-            # Hacer parpadear toda la columna del paso actual (invertir)
+        # Destacar paso seleccionado (brillo diferente - invertir píxeles)
+        if 0 <= selected_step < 32:
             for y in range(8):
-                current_state = self.get_pixel(current_step, y)
-                self.set_pixel(current_step, y, not current_state)
+                current_state = self.get_pixel(selected_step, y)
+                # Solo invertir si no es el current_step
+                if selected_step != current_step:
+                    self.set_pixel(selected_step, y, not current_state)
+        
+        # Destacar paso actual durante reproducción (parpadear)
+        if 0 <= current_step < 32:
+            # Hacer parpadear toda la columna del paso actual
+            for y in range(8):
+                self.set_pixel(current_step, y, True)
         
         self.update()
     
@@ -267,6 +273,273 @@ class LEDMatrix:
             for y in range(8):
                 if (x + y) % 2 == 0:
                     self.set_pixel(x, y, True)
+        self.update()
+    
+    # ===== MÉTODOS DE RENDERIZADO DE VISTAS =====
+    
+    def draw_bpm_view(self, bpm, beat_pulse=False, frame=0):
+        """
+        Vista de BPM: Muestra el tempo de manera visual
+        
+        Args:
+            bpm: Tempo actual (60-200)
+            beat_pulse: Si debe pulsar con el beat
+            frame: Frame de animación
+        """
+        self.clear()
+        
+        # Texto "BPM" estilizado en las primeras 3 filas
+        # B
+        for y in range(5):
+            self.set_pixel(2, y, True)
+        self.set_pixel(3, 0, True)
+        self.set_pixel(3, 2, True)
+        self.set_pixel(3, 4, True)
+        self.set_pixel(4, 1, True)
+        self.set_pixel(4, 3, True)
+        
+        # P
+        for y in range(5):
+            self.set_pixel(6, y, True)
+        self.set_pixel(7, 0, True)
+        self.set_pixel(7, 2, True)
+        self.set_pixel(8, 1, True)
+        
+        # M
+        for y in range(5):
+            self.set_pixel(10, y, True)
+            self.set_pixel(13, y, True)
+        self.set_pixel(11, 1, True)
+        self.set_pixel(12, 2, True)
+        
+        # Barra gráfica del tempo en las últimas 3 filas
+        bpm_normalized = (bpm - 60) / (200 - 60)  # 0.0 a 1.0
+        bar_width = int(bpm_normalized * 30) + 1  # 1-31 LEDs
+        
+        for x in range(bar_width):
+            self.set_pixel(x + 1, 6, True)
+            self.set_pixel(x + 1, 7, True)
+        
+        # Pulso al beat (animación)
+        if beat_pulse or (frame % 4 < 2):
+            # Indicador pulsante en los extremos
+            self.set_pixel(0, 6, True)
+            self.set_pixel(0, 7, True)
+            self.set_pixel(31, 6, True)
+            self.set_pixel(31, 7, True)
+        
+        self.update()
+    
+    def draw_volume_view(self, volumes):
+        """
+        Vista de volúmenes: Barras para cada grupo
+        
+        Args:
+            volumes: Dict con 'master', 'drums', 'hats', 'toms', 'cyms'
+        """
+        self.clear()
+        
+        master = volumes.get('master', 0.5)
+        drums = volumes.get('drums', 0.5)
+        hats = volumes.get('hats', 0.5)
+        toms = volumes.get('toms', 0.5)
+        cyms = volumes.get('cyms', 0.5)
+        
+        # Master volume (más ancho, columnas 0-7)
+        master_height = int(master * 8)
+        for x in range(8):
+            for y in range(master_height):
+                self.set_pixel(x, 7 - y, True)
+        
+        # Separador
+        for y in range(8):
+            self.set_pixel(8, y, y % 2 == 0)
+        
+        # Drums (columnas 10-14)
+        drums_height = int(drums * 8)
+        for x in range(10, 15):
+            for y in range(drums_height):
+                self.set_pixel(x, 7 - y, True)
+        
+        # Hats (columnas 16-20)
+        hats_height = int(hats * 8)
+        for x in range(16, 21):
+            for y in range(hats_height):
+                self.set_pixel(x, 7 - y, True)
+        
+        # Toms (columnas 22-25)
+        toms_height = int(toms * 8)
+        for x in range(22, 26):
+            for y in range(toms_height):
+                self.set_pixel(x, 7 - y, True)
+        
+        # Cymbals (columnas 27-31)
+        cyms_height = int(cyms * 8)
+        for x in range(27, 32):
+            for y in range(cyms_height):
+                self.set_pixel(x, 7 - y, True)
+        
+        self.update()
+    
+    def draw_swing_view(self, swing, frame=0):
+        """
+        Vista de swing: Representación visual del groove
+        
+        Args:
+            swing: Porcentaje de swing (0-75)
+            frame: Frame de animación
+        """
+        self.clear()
+        
+        # Título "SWING"
+        # S
+        for x in range(2, 5):
+            self.set_pixel(x, 0, True)
+            self.set_pixel(x, 2, True)
+            self.set_pixel(x, 4, True)
+        self.set_pixel(2, 1, True)
+        self.set_pixel(4, 3, True)
+        
+        # Representación visual del swing como onda
+        swing_normalized = swing / 75.0
+        
+        # Línea base recta (sin swing)
+        for x in range(32):
+            self.set_pixel(x, 6, True)
+        
+        # Onda sinusoidal que se curva más con mayor swing
+        if swing > 0:
+            import math
+            for x in range(32):
+                # Onda sinusoidal con amplitud proporcional al swing
+                amplitude = swing_normalized * 2  # Máximo 2 píxeles de desplazamiento
+                offset = int(amplitude * math.sin(x * math.pi / 8))
+                y = 6 + offset
+                if 0 <= y < 8:
+                    self.set_pixel(x, y, True)
+        
+        # Indicador numérico en la parte inferior (% como barras)
+        percent_bars = int((swing / 75.0) * 32)
+        for x in range(percent_bars):
+            self.set_pixel(x, 7, True)
+        
+        self.update()
+    
+    def draw_pattern_view(self, pattern_num):
+        """
+        Vista de patrón: Muestra el número grande del patrón
+        
+        Args:
+            pattern_num: Número de patrón (1-8)
+        """
+        self.clear()
+        
+        # Números grandes 5x7 píxeles centrados
+        numbers = {
+            1: [(1,0),(1,1),(1,2),(1,3),(1,4),(1,5),(1,6),(0,1)],
+            2: [(0,0),(1,0),(2,0),(2,1),(2,2),(1,3),(0,3),(0,4),(0,5),(0,6),(1,6),(2,6)],
+            3: [(0,0),(1,0),(2,0),(2,1),(2,2),(1,3),(2,4),(2,5),(0,6),(1,6),(2,6)],
+            4: [(0,0),(0,1),(0,2),(0,3),(1,3),(2,0),(2,1),(2,2),(2,3),(2,4),(2,5),(2,6)],
+            5: [(0,0),(1,0),(2,0),(0,1),(0,2),(0,3),(1,3),(2,3),(2,4),(2,5),(0,6),(1,6),(2,6)],
+            6: [(0,0),(1,0),(2,0),(0,1),(0,2),(0,3),(1,3),(2,3),(0,4),(2,4),(0,5),(2,5),(0,6),(1,6),(2,6)],
+            7: [(0,0),(1,0),(2,0),(2,1),(2,2),(2,3),(1,4),(1,5),(0,6)],
+            8: [(0,0),(1,0),(2,0),(0,1),(2,1),(0,2),(2,2),(0,3),(1,3),(2,3),(0,4),(2,4),(0,5),(2,5),(0,6),(1,6),(2,6)]
+        }
+        
+        # Dibujar número centrado
+        if pattern_num in numbers:
+            offset_x = 14  # Centrar en x
+            offset_y = 1   # Centrar en y
+            for x, y in numbers[pattern_num]:
+                self.set_pixel(offset_x + x, offset_y + y, True)
+        
+        # Borde decorativo
+        for x in range(32):
+            if x % 4 < 2:
+                self.set_pixel(x, 0, True)
+                self.set_pixel(x, 7, True)
+        
+        self.update()
+    
+    def draw_save_animation(self, frame):
+        """
+        Vista de guardado: Animación de guardando
+        
+        Args:
+            frame: Frame de animación
+        """
+        self.clear()
+        
+        # Animación de ondas expandiéndose desde el centro
+        center_x = 16
+        center_y = 4
+        
+        # Calcular radio basado en frame
+        radius = (frame % 20) // 2
+        
+        if radius < 10:
+            # Ondas expandiéndose
+            for x in range(32):
+                for y in range(8):
+                    dist = abs(x - center_x) + abs(y - center_y)
+                    if dist == radius or dist == radius + 2:
+                        self.set_pixel(x, y, True)
+        else:
+            # Checkmark final
+            # ✓
+            self.set_pixel(12, 4, True)
+            self.set_pixel(13, 5, True)
+            self.set_pixel(14, 6, True)
+            self.set_pixel(15, 5, True)
+            self.set_pixel(16, 4, True)
+            self.set_pixel(17, 3, True)
+            self.set_pixel(18, 2, True)
+            self.set_pixel(19, 1, True)
+        
+        self.update()
+    
+    def draw_pad_view(self, instrument_id, instrument_name, frame):
+        """
+        Vista de pad: Muestra el instrumento tocado
+        
+        Args:
+            instrument_id: ID del instrumento (0-7)
+            instrument_name: Nombre del instrumento
+            frame: Frame de animación
+        """
+        self.clear()
+        
+        # Nombre del instrumento (simplificado)
+        # Solo mostrar primera letra grande
+        first_letter = instrument_name[0].upper() if instrument_name else 'X'
+        
+        # Letra grande centrada
+        # (implementación simple, solo algunas letras)
+        letters = {
+            'K': [(1,0),(1,1),(1,2),(1,3),(1,4),(1,5),(1,6),(2,2),(2,3),(3,1),(3,2),(3,4),(3,5),(4,0),(4,6)],
+            'S': [(0,0),(1,0),(2,0),(3,0),(0,1),(0,2),(1,3),(2,3),(3,4),(3,5),(0,6),(1,6),(2,6),(3,6)],
+            'C': [(0,0),(1,0),(2,0),(3,0),(0,1),(0,2),(0,3),(0,4),(0,5),(0,6),(1,6),(2,6),(3,6)],
+            'O': [(0,0),(1,0),(2,0),(0,1),(2,1),(0,2),(2,2),(0,3),(2,3),(0,4),(2,4),(0,5),(2,5),(0,6),(1,6),(2,6)],
+            'T': [(0,0),(1,0),(2,0),(3,0),(4,0),(2,1),(2,2),(2,3),(2,4),(2,5),(2,6)],
+            'R': [(0,0),(0,1),(0,2),(0,3),(0,4),(0,5),(0,6),(1,0),(2,0),(2,1),(2,2),(1,3),(2,4),(2,5),(2,6)]
+        }
+        
+        if first_letter in letters:
+            offset_x = 13  # Centrar
+            offset_y = 1
+            for x, y in letters[first_letter]:
+                self.set_pixel(offset_x + x, offset_y + y, True)
+        
+        # Efecto de "golpe" - círculo pulsante
+        pulse_size = 3 - (frame % 6) // 2
+        if pulse_size > 0:
+            # Esquinas pulsantes
+            for i in range(pulse_size):
+                self.set_pixel(i, 0, True)
+                self.set_pixel(31-i, 0, True)
+                self.set_pixel(i, 7, True)
+                self.set_pixel(31-i, 7, True)
+        
         self.update()
     
     def cleanup(self):
