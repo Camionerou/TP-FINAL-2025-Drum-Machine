@@ -10,12 +10,10 @@ from enum import Enum
 class ViewType(Enum):
     """Tipos de vistas disponibles"""
     SEQUENCER = "sequencer"
-    BPM = "bpm"
-    VOLUME = "volume"
-    SWING = "swing"
-    PATTERN = "pattern"
-    SAVE = "save"
-    PAD = "pad"
+    INFO = "info"           # BPM + SWING + VOL
+    VOLUMES = "volumes"     # Volúmenes grupales con barras
+    PATTERN = "pattern"     # Info detallada de patrón
+    SAVE = "save"          # Confirmación de guardado
 
 
 class ViewManager:
@@ -134,39 +132,33 @@ class ViewManager:
             selected_step: Paso actualmente seleccionado (POT_SCROLL)
         """
         if self.current_view == ViewType.SEQUENCER:
-            # Vista principal: secuenciador completo
+            # Vista principal: secuenciador con playhead dual
             pattern = sequencer.get_pattern()
-            current_step = sequencer.current_step if sequencer.is_playing else -1
-            led_matrix.draw_sequencer_grid(pattern, current_step, selected_step)
+            # Playhead dual: si está reproduciendo muestra paso actual, si no muestra paso seleccionado
+            display_step = sequencer.current_step if sequencer.is_playing else selected_step
+            led_matrix.draw_sequencer_grid(pattern, display_step)
         
-        elif self.current_view == ViewType.BPM:
-            # Vista de tempo
+        elif self.current_view == ViewType.INFO:
+            # Vista INFO: BPM + SWING + VOL
             bpm = self.view_data.get('bpm', 120)
-            beat_pulse = self.view_data.get('beat_pulse', False)
-            led_matrix.draw_bpm_view(bpm, beat_pulse, self.animation_frame)
-        
-        elif self.current_view == ViewType.VOLUME:
-            # Vista de volúmenes
-            volumes = self.view_data.get('volumes', {})
-            led_matrix.draw_volume_view(volumes)
-        
-        elif self.current_view == ViewType.SWING:
-            # Vista de swing
             swing = self.view_data.get('swing', 0)
-            led_matrix.draw_swing_view(swing, self.animation_frame)
+            volume = self.view_data.get('volume', 80)
+            led_matrix.draw_info_view(bpm, swing, volume)
+        
+        elif self.current_view == ViewType.VOLUMES:
+            # Vista de volúmenes grupales
+            volumes = self.view_data.get('volumes', {})
+            led_matrix.draw_volumes_view(volumes)
         
         elif self.current_view == ViewType.PATTERN:
-            # Vista de patrón
+            # Vista detallada de patrón
             pattern_num = self.view_data.get('pattern_num', 1)
-            led_matrix.draw_pattern_view(pattern_num)
+            bpm = self.view_data.get('bpm', 120)
+            steps = self.view_data.get('steps', 32)
+            led_matrix.draw_pattern_view(pattern_num, bpm, steps)
         
         elif self.current_view == ViewType.SAVE:
-            # Vista de guardado (animación)
-            led_matrix.draw_save_animation(self.animation_frame)
-        
-        elif self.current_view == ViewType.PAD:
-            # Vista de pad
-            instrument_id = self.view_data.get('instrument_id', 0)
-            instrument_name = self.view_data.get('instrument_name', 'DRUM')
-            led_matrix.draw_pad_view(instrument_id, instrument_name, self.animation_frame)
+            # Vista de confirmación de guardado
+            pattern_num = self.view_data.get('pattern_num', 1)
+            led_matrix.draw_save_view(pattern_num)
 

@@ -164,14 +164,14 @@ class LEDMatrix:
                 data = self.buffer[device_id][row]
                 self._write_device(device_id, register, data)
     
-    def draw_sequencer_grid(self, pattern, current_step=-1, selected_step=-1):
+    def draw_sequencer_grid(self, pattern, display_step=-1):
         """
         Dibujar grid del secuenciador completo (32 pasos × 8 instrumentos)
+        Con playhead dual inteligente
         
         Args:
             pattern: Array 32x8 con el patrón (True/False)
-            current_step: Paso actual siendo reproducido (-1 si no está reproduciendo)
-            selected_step: Paso seleccionado para edición (POT_SCROLL)
+            display_step: Paso a resaltar (playhead cuando reproduce, paso seleccionado cuando no)
         """
         # Limpiar toda la matriz
         self.clear()
@@ -182,19 +182,10 @@ class LEDMatrix:
                 if pattern[step][instrument]:
                     self.set_pixel(step, instrument, True)
         
-        # Destacar paso seleccionado (brillo diferente - invertir píxeles)
-        if 0 <= selected_step < 32:
+        # Destacar paso actual/seleccionado (iluminar toda la columna)
+        if 0 <= display_step < 32:
             for y in range(8):
-                current_state = self.get_pixel(selected_step, y)
-                # Solo invertir si no es el current_step
-                if selected_step != current_step:
-                    self.set_pixel(selected_step, y, not current_state)
-        
-        # Destacar paso actual durante reproducción (parpadear)
-        if 0 <= current_step < 32:
-            # Hacer parpadear toda la columna del paso actual
-            for y in range(8):
-                self.set_pixel(current_step, y, True)
+                self.set_pixel(display_step, y, True)
         
         self.update()
     
@@ -275,270 +266,342 @@ class LEDMatrix:
                     self.set_pixel(x, y, True)
         self.update()
     
-    # ===== MÉTODOS DE RENDERIZADO DE VISTAS =====
+    # ===== FUENTE DE NÚMEROS 3x5 COMPACTA =====
     
-    def draw_bpm_view(self, bpm, beat_pulse=False, frame=0):
+    def _get_digit_3x5(self, digit):
         """
-        Vista de BPM: Muestra el tempo de manera visual
+        Obtener bitmap de un dígito en formato 3x5 píxeles
+        
+        Args:
+            digit: Dígito 0-9
+            
+        Returns:
+            Lista de tuplas (x, y) con píxeles a encender
+        """
+        digits = {
+            '0': [(0,0),(1,0),(2,0),(0,1),(2,1),(0,2),(2,2),(0,3),(2,3),(0,4),(1,4),(2,4)],
+            '1': [(1,0),(0,1),(1,1),(1,2),(1,3),(0,4),(1,4),(2,4)],
+            '2': [(0,0),(1,0),(2,0),(2,1),(0,2),(1,2),(2,2),(0,3),(0,4),(1,4),(2,4)],
+            '3': [(0,0),(1,0),(2,0),(2,1),(1,2),(2,2),(2,3),(0,4),(1,4),(2,4)],
+            '4': [(0,0),(2,0),(0,1),(2,1),(0,2),(1,2),(2,2),(2,3),(2,4)],
+            '5': [(0,0),(1,0),(2,0),(0,1),(0,2),(1,2),(2,2),(2,3),(0,4),(1,4),(2,4)],
+            '6': [(0,0),(1,0),(2,0),(0,1),(0,2),(1,2),(2,2),(0,3),(2,3),(0,4),(1,4),(2,4)],
+            '7': [(0,0),(1,0),(2,0),(2,1),(2,2),(1,3),(1,4)],
+            '8': [(0,0),(1,0),(2,0),(0,1),(2,1),(0,2),(1,2),(2,2),(0,3),(2,3),(0,4),(1,4),(2,4)],
+            '9': [(0,0),(1,0),(2,0),(0,1),(2,1),(0,2),(1,2),(2,2),(2,3),(0,4),(1,4),(2,4)],
+        }
+        return digits.get(str(digit), [])
+    
+    def _draw_number(self, number, start_x, start_y):
+        """
+        Dibujar un número en la posición especificada
+        
+        Args:
+            number: Número a dibujar (puede ser string o int)
+            start_x: Posición X inicial
+            start_y: Posición Y inicial
+        """
+        str_number = str(number)
+        x_offset = start_x
+        
+        for char in str_number:
+            if char.isdigit():
+                pixels = self._get_digit_3x5(char)
+                for px, py in pixels:
+                    self.set_pixel(x_offset + px, start_y + py, True)
+                x_offset += 4  # 3 píxeles de ancho + 1 de espacio
+            elif char == ' ':
+                x_offset += 2
+    
+    # ===== MÉTODOS DE RENDERIZADO DE VISTAS LIMPIAS =====
+    
+    def draw_info_view(self, bpm, swing, volume):
+        """
+        Vista INFO: BPM + SWING + VOL en una sola vista
+        Formato: BPM  145     SWG  35     VOL  87
         
         Args:
             bpm: Tempo actual (60-200)
-            beat_pulse: Si debe pulsar con el beat
-            frame: Frame de animación
+            swing: Porcentaje de swing (0-75)
+            volume: Volumen master (0-100)
         """
         self.clear()
         
-        # Texto "BPM" estilizado en las primeras 3 filas
+        # Zona 1: BPM (columnas 0-10)
+        # Texto "BPM" en fila 0-1 (pequeño)
         # B
-        for y in range(5):
-            self.set_pixel(2, y, True)
-        self.set_pixel(3, 0, True)
-        self.set_pixel(3, 2, True)
-        self.set_pixel(3, 4, True)
-        self.set_pixel(4, 1, True)
-        self.set_pixel(4, 3, True)
-        
+        self.set_pixel(0, 0, True)
+        self.set_pixel(0, 1, True)
+        self.set_pixel(1, 0, True)
+        self.set_pixel(1, 1, True)
         # P
-        for y in range(5):
-            self.set_pixel(6, y, True)
+        self.set_pixel(3, 0, True)
+        self.set_pixel(3, 1, True)
+        self.set_pixel(4, 0, True)
+        # M
+        self.set_pixel(6, 0, True)
+        self.set_pixel(6, 1, True)
         self.set_pixel(7, 0, True)
-        self.set_pixel(7, 2, True)
+        self.set_pixel(8, 0, True)
         self.set_pixel(8, 1, True)
         
-        # M
-        for y in range(5):
-            self.set_pixel(10, y, True)
-            self.set_pixel(13, y, True)
-        self.set_pixel(11, 1, True)
-        self.set_pixel(12, 2, True)
+        # Número BPM en fila 3-7 (fuente 3x5)
+        self._draw_number(bpm, 1, 3)
         
-        # Barra gráfica del tempo en las últimas 3 filas
-        bpm_normalized = (bpm - 60) / (200 - 60)  # 0.0 a 1.0
-        bar_width = int(bpm_normalized * 30) + 1  # 1-31 LEDs
+        # Zona 2: SWING (columnas 11-20)
+        # Texto "SWG" en fila 0-1
+        # S
+        self.set_pixel(11, 0, True)
+        self.set_pixel(12, 0, True)
+        self.set_pixel(12, 1, True)
+        # W
+        self.set_pixel(14, 0, True)
+        self.set_pixel(14, 1, True)
+        self.set_pixel(15, 1, True)
+        self.set_pixel(16, 0, True)
+        self.set_pixel(16, 1, True)
+        # G
+        self.set_pixel(18, 0, True)
+        self.set_pixel(19, 0, True)
+        self.set_pixel(19, 1, True)
         
-        for x in range(bar_width):
-            self.set_pixel(x + 1, 6, True)
-            self.set_pixel(x + 1, 7, True)
+        # Número SWING en fila 3-7
+        self._draw_number(swing, 13, 3)
         
-        # Pulso al beat (animación)
-        if beat_pulse or (frame % 4 < 2):
-            # Indicador pulsante en los extremos
-            self.set_pixel(0, 6, True)
-            self.set_pixel(0, 7, True)
-            self.set_pixel(31, 6, True)
-            self.set_pixel(31, 7, True)
+        # Zona 3: VOL (columnas 21-31)
+        # Texto "VOL" en fila 0-1
+        # V
+        self.set_pixel(22, 0, True)
+        self.set_pixel(23, 1, True)
+        self.set_pixel(24, 0, True)
+        # O
+        self.set_pixel(26, 0, True)
+        self.set_pixel(27, 0, True)
+        self.set_pixel(26, 1, True)
+        self.set_pixel(27, 1, True)
+        # L
+        self.set_pixel(29, 0, True)
+        self.set_pixel(29, 1, True)
+        self.set_pixel(30, 1, True)
+        
+        # Número VOL en fila 3-7
+        self._draw_number(volume, 24, 3)
         
         self.update()
     
-    def draw_volume_view(self, volumes):
+    def draw_volumes_view(self, volumes):
         """
-        Vista de volúmenes: Barras para cada grupo
+        Vista VOLUMES: 4 cuadrantes con nombre y barra horizontal
+        Formato: Nombre arriba, barra 1x8 abajo
         
         Args:
-            volumes: Dict con 'master', 'drums', 'hats', 'toms', 'cyms'
+            volumes: Dict con 'drums', 'hats', 'toms', 'cyms' (0.0-1.0)
         """
         self.clear()
         
-        master = volumes.get('master', 0.5)
         drums = volumes.get('drums', 0.5)
         hats = volumes.get('hats', 0.5)
         toms = volumes.get('toms', 0.5)
         cyms = volumes.get('cyms', 0.5)
         
-        # Master volume (más ancho, columnas 0-7)
-        master_height = int(master * 8)
-        for x in range(8):
-            for y in range(master_height):
-                self.set_pixel(x, 7 - y, True)
-        
-        # Separador
-        for y in range(8):
-            self.set_pixel(8, y, y % 2 == 0)
-        
-        # Drums (columnas 10-14)
-        drums_height = int(drums * 8)
-        for x in range(10, 15):
-            for y in range(drums_height):
-                self.set_pixel(x, 7 - y, True)
-        
-        # Hats (columnas 16-20)
-        hats_height = int(hats * 8)
-        for x in range(16, 21):
-            for y in range(hats_height):
-                self.set_pixel(x, 7 - y, True)
-        
-        # Toms (columnas 22-25)
-        toms_height = int(toms * 8)
-        for x in range(22, 26):
-            for y in range(toms_height):
-                self.set_pixel(x, 7 - y, True)
-        
-        # Cymbals (columnas 27-31)
-        cyms_height = int(cyms * 8)
-        for x in range(27, 32):
-            for y in range(cyms_height):
-                self.set_pixel(x, 7 - y, True)
-        
-        self.update()
-    
-    def draw_swing_view(self, swing, frame=0):
-        """
-        Vista de swing: Representación visual del groove
-        
-        Args:
-            swing: Porcentaje de swing (0-75)
-            frame: Frame de animación
-        """
-        self.clear()
-        
-        # Título "SWING"
-        # S
-        for x in range(2, 5):
-            self.set_pixel(x, 0, True)
-            self.set_pixel(x, 2, True)
-            self.set_pixel(x, 4, True)
-        self.set_pixel(2, 1, True)
+        # Cuadrante 1: DRUMS (columnas 0-7)
+        # Texto "DR" centrado en filas 2-3
+        # D
+        self.set_pixel(2, 2, True)
+        self.set_pixel(2, 3, True)
+        self.set_pixel(2, 4, True)
+        self.set_pixel(3, 2, True)
+        self.set_pixel(3, 4, True)
         self.set_pixel(4, 3, True)
-        
-        # Representación visual del swing como onda
-        swing_normalized = swing / 75.0
-        
-        # Línea base recta (sin swing)
-        for x in range(32):
-            self.set_pixel(x, 6, True)
-        
-        # Onda sinusoidal que se curva más con mayor swing
-        if swing > 0:
-            import math
-            for x in range(32):
-                # Onda sinusoidal con amplitud proporcional al swing
-                amplitude = swing_normalized * 2  # Máximo 2 píxeles de desplazamiento
-                offset = int(amplitude * math.sin(x * math.pi / 8))
-                y = 6 + offset
-                if 0 <= y < 8:
-                    self.set_pixel(x, y, True)
-        
-        # Indicador numérico en la parte inferior (% como barras)
-        percent_bars = int((swing / 75.0) * 32)
-        for x in range(percent_bars):
+        # R
+        self.set_pixel(5, 2, True)
+        self.set_pixel(5, 3, True)
+        self.set_pixel(5, 4, True)
+        # Barra horizontal en fila 7
+        drums_leds = int(drums * 8)
+        for x in range(drums_leds):
             self.set_pixel(x, 7, True)
         
+        # Cuadrante 2: HATS (columnas 8-15)
+        # Texto "HH" centrado
+        # H
+        self.set_pixel(10, 2, True)
+        self.set_pixel(10, 3, True)
+        self.set_pixel(10, 4, True)
+        self.set_pixel(11, 3, True)
+        self.set_pixel(12, 2, True)
+        self.set_pixel(12, 3, True)
+        self.set_pixel(12, 4, True)
+        # Barra horizontal
+        hats_leds = int(hats * 8)
+        for x in range(hats_leds):
+            self.set_pixel(8 + x, 7, True)
+        
+        # Cuadrante 3: TOMS (columnas 16-23)
+        # Texto "TM"
+        # T
+        self.set_pixel(18, 2, True)
+        self.set_pixel(19, 2, True)
+        self.set_pixel(20, 2, True)
+        self.set_pixel(19, 3, True)
+        self.set_pixel(19, 4, True)
+        # M
+        self.set_pixel(21, 2, True)
+        self.set_pixel(21, 3, True)
+        self.set_pixel(21, 4, True)
+        # Barra horizontal
+        toms_leds = int(toms * 8)
+        for x in range(toms_leds):
+            self.set_pixel(16 + x, 7, True)
+        
+        # Cuadrante 4: CYMBALS (columnas 24-31)
+        # Texto "CY"
+        # C
+        self.set_pixel(26, 2, True)
+        self.set_pixel(27, 2, True)
+        self.set_pixel(26, 3, True)
+        self.set_pixel(26, 4, True)
+        # Y
+        self.set_pixel(29, 2, True)
+        self.set_pixel(30, 2, True)
+        self.set_pixel(29, 3, True)
+        self.set_pixel(29, 4, True)
+        # Barra horizontal
+        cyms_leds = int(cyms * 8)
+        for x in range(cyms_leds):
+            self.set_pixel(24 + x, 7, True)
+        
         self.update()
     
-    def draw_pattern_view(self, pattern_num):
+    def draw_pattern_view(self, pattern_num, bpm, steps):
         """
-        Vista de patrón: Muestra el número grande del patrón
+        Vista PATTERN: Info detallada del patrón
+        Formato: PATTERN  3/8
+                 BPM 145  STEPS 32
         
         Args:
             pattern_num: Número de patrón (1-8)
+            bpm: Tempo actual
+            steps: Número de pasos
         """
         self.clear()
         
-        # Números grandes 5x7 píxeles centrados
-        numbers = {
-            1: [(1,0),(1,1),(1,2),(1,3),(1,4),(1,5),(1,6),(0,1)],
-            2: [(0,0),(1,0),(2,0),(2,1),(2,2),(1,3),(0,3),(0,4),(0,5),(0,6),(1,6),(2,6)],
-            3: [(0,0),(1,0),(2,0),(2,1),(2,2),(1,3),(2,4),(2,5),(0,6),(1,6),(2,6)],
-            4: [(0,0),(0,1),(0,2),(0,3),(1,3),(2,0),(2,1),(2,2),(2,3),(2,4),(2,5),(2,6)],
-            5: [(0,0),(1,0),(2,0),(0,1),(0,2),(0,3),(1,3),(2,3),(2,4),(2,5),(0,6),(1,6),(2,6)],
-            6: [(0,0),(1,0),(2,0),(0,1),(0,2),(0,3),(1,3),(2,3),(0,4),(2,4),(0,5),(2,5),(0,6),(1,6),(2,6)],
-            7: [(0,0),(1,0),(2,0),(2,1),(2,2),(2,3),(1,4),(1,5),(0,6)],
-            8: [(0,0),(1,0),(2,0),(0,1),(2,1),(0,2),(2,2),(0,3),(1,3),(2,3),(0,4),(2,4),(0,5),(2,5),(0,6),(1,6),(2,6)]
-        }
+        # Línea 1: "PATTERN  3/8"
+        # P
+        self.set_pixel(0, 0, True)
+        self.set_pixel(0, 1, True)
+        self.set_pixel(1, 0, True)
+        # A
+        self.set_pixel(2, 0, True)
+        self.set_pixel(2, 1, True)
+        self.set_pixel(3, 0, True)
+        self.set_pixel(3, 1, True)
+        # T
+        self.set_pixel(5, 0, True)
+        self.set_pixel(6, 0, True)
+        self.set_pixel(5, 1, True)
+        # T
+        self.set_pixel(7, 0, True)
+        self.set_pixel(8, 0, True)
+        self.set_pixel(8, 1, True)
         
-        # Dibujar número centrado
-        if pattern_num in numbers:
-            offset_x = 14  # Centrar en x
-            offset_y = 1   # Centrar en y
-            for x, y in numbers[pattern_num]:
-                self.set_pixel(offset_x + x, offset_y + y, True)
+        # Número de patrón: "3/8" usando fuente 3x5
+        self._draw_number(pattern_num, 14, 0)
+        self.set_pixel(17, 2, True)  # "/"
+        self._draw_number(8, 18, 0)  # Total de patrones
         
-        # Borde decorativo
-        for x in range(32):
-            if x % 4 < 2:
-                self.set_pixel(x, 0, True)
-                self.set_pixel(x, 7, True)
+        # Línea 2: "BPM 145  STEPS 32"
+        # BPM
+        self.set_pixel(0, 4, True)
+        self.set_pixel(0, 5, True)
+        self.set_pixel(1, 4, True)
+        # P
+        self.set_pixel(3, 4, True)
+        self.set_pixel(3, 5, True)
+        # M
+        self.set_pixel(5, 4, True)
+        self.set_pixel(5, 5, True)
+        self.set_pixel(6, 4, True)
+        self.set_pixel(7, 4, True)
+        self.set_pixel(7, 5, True)
+        
+        # BPM número
+        self._draw_number(bpm, 9, 4)
+        
+        # STEPS
+        # S
+        self.set_pixel(18, 4, True)
+        self.set_pixel(18, 5, True)
+        self.set_pixel(19, 4, True)
+        # T
+        self.set_pixel(20, 4, True)
+        # P
+        self.set_pixel(22, 4, True)
+        self.set_pixel(22, 5, True)
+        self.set_pixel(23, 4, True)
+        # S
+        self.set_pixel(24, 4, True)
+        self.set_pixel(24, 5, True)
+        
+        # STEPS número
+        self._draw_number(steps, 26, 4)
         
         self.update()
     
-    def draw_save_animation(self, frame):
+    def draw_save_view(self, pattern_num):
         """
-        Vista de guardado: Animación de guardando
+        Vista SAVE: Confirmación simple de guardado
+        Formato: SAVED  P3  ✓
         
         Args:
-            frame: Frame de animación
+            pattern_num: Número de patrón guardado
         """
         self.clear()
         
-        # Animación de ondas expandiéndose desde el centro
-        center_x = 16
-        center_y = 4
+        # Texto "SAVED"
+        # S
+        self.set_pixel(4, 2, True)
+        self.set_pixel(5, 2, True)
+        self.set_pixel(4, 3, True)
+        self.set_pixel(5, 4, True)
+        # A
+        self.set_pixel(7, 2, True)
+        self.set_pixel(7, 3, True)
+        self.set_pixel(7, 4, True)
+        self.set_pixel(8, 2, True)
+        self.set_pixel(8, 3, True)
+        self.set_pixel(8, 4, True)
+        # V
+        self.set_pixel(10, 2, True)
+        self.set_pixel(10, 3, True)
+        self.set_pixel(11, 4, True)
+        self.set_pixel(12, 2, True)
+        self.set_pixel(12, 3, True)
+        # E
+        self.set_pixel(14, 2, True)
+        self.set_pixel(14, 3, True)
+        self.set_pixel(14, 4, True)
+        self.set_pixel(15, 2, True)
+        self.set_pixel(15, 3, True)
+        self.set_pixel(15, 4, True)
+        # D
+        self.set_pixel(17, 2, True)
+        self.set_pixel(17, 3, True)
+        self.set_pixel(17, 4, True)
+        self.set_pixel(18, 2, True)
+        self.set_pixel(18, 4, True)
         
-        # Calcular radio basado en frame
-        radius = (frame % 20) // 2
+        # "P3" - Patrón numero
+        self.set_pixel(22, 3, True)
+        self.set_pixel(22, 4, True)
+        self.set_pixel(23, 3, True)
+        self._draw_number(pattern_num, 24, 2)
         
-        if radius < 10:
-            # Ondas expandiéndose
-            for x in range(32):
-                for y in range(8):
-                    dist = abs(x - center_x) + abs(y - center_y)
-                    if dist == radius or dist == radius + 2:
-                        self.set_pixel(x, y, True)
-        else:
-            # Checkmark final
-            # ✓
-            self.set_pixel(12, 4, True)
-            self.set_pixel(13, 5, True)
-            self.set_pixel(14, 6, True)
-            self.set_pixel(15, 5, True)
-            self.set_pixel(16, 4, True)
-            self.set_pixel(17, 3, True)
-            self.set_pixel(18, 2, True)
-            self.set_pixel(19, 1, True)
-        
-        self.update()
-    
-    def draw_pad_view(self, instrument_id, instrument_name, frame):
-        """
-        Vista de pad: Muestra el instrumento tocado
-        
-        Args:
-            instrument_id: ID del instrumento (0-7)
-            instrument_name: Nombre del instrumento
-            frame: Frame de animación
-        """
-        self.clear()
-        
-        # Nombre del instrumento (simplificado)
-        # Solo mostrar primera letra grande
-        first_letter = instrument_name[0].upper() if instrument_name else 'X'
-        
-        # Letra grande centrada
-        # (implementación simple, solo algunas letras)
-        letters = {
-            'K': [(1,0),(1,1),(1,2),(1,3),(1,4),(1,5),(1,6),(2,2),(2,3),(3,1),(3,2),(3,4),(3,5),(4,0),(4,6)],
-            'S': [(0,0),(1,0),(2,0),(3,0),(0,1),(0,2),(1,3),(2,3),(3,4),(3,5),(0,6),(1,6),(2,6),(3,6)],
-            'C': [(0,0),(1,0),(2,0),(3,0),(0,1),(0,2),(0,3),(0,4),(0,5),(0,6),(1,6),(2,6),(3,6)],
-            'O': [(0,0),(1,0),(2,0),(0,1),(2,1),(0,2),(2,2),(0,3),(2,3),(0,4),(2,4),(0,5),(2,5),(0,6),(1,6),(2,6)],
-            'T': [(0,0),(1,0),(2,0),(3,0),(4,0),(2,1),(2,2),(2,3),(2,4),(2,5),(2,6)],
-            'R': [(0,0),(0,1),(0,2),(0,3),(0,4),(0,5),(0,6),(1,0),(2,0),(2,1),(2,2),(1,3),(2,4),(2,5),(2,6)]
-        }
-        
-        if first_letter in letters:
-            offset_x = 13  # Centrar
-            offset_y = 1
-            for x, y in letters[first_letter]:
-                self.set_pixel(offset_x + x, offset_y + y, True)
-        
-        # Efecto de "golpe" - círculo pulsante
-        pulse_size = 3 - (frame % 6) // 2
-        if pulse_size > 0:
-            # Esquinas pulsantes
-            for i in range(pulse_size):
-                self.set_pixel(i, 0, True)
-                self.set_pixel(31-i, 0, True)
-                self.set_pixel(i, 7, True)
-                self.set_pixel(31-i, 7, True)
+        # Checkmark ✓
+        self.set_pixel(29, 4, True)
+        self.set_pixel(30, 5, True)
+        self.set_pixel(31, 2, True)
+        self.set_pixel(31, 3, True)
         
         self.update()
     

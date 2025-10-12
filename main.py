@@ -242,16 +242,6 @@ class DrumMachine:
             if instrument_id not in self.muted_instruments:
                 self.audio_engine.play_sample(instrument_id)
             
-            # Mostrar vista PAD
-            self.view_manager.show_view(
-                ViewType.PAD,
-                {
-                    'instrument_id': instrument_id,
-                    'instrument_name': INSTRUMENTS[instrument_id]
-                },
-                duration=1.0
-            )
-            
             # LED azul parpadea
             self.led_controller.pulse_led('blue', 0.1)
         
@@ -291,11 +281,15 @@ class DrumMachine:
             self.sequencer.current_pattern_id = new_pattern
             self.sequencer.clear_pattern()
         
-        # Mostrar vista de patrón
+        # Mostrar vista PATTERN detallada
         self.view_manager.show_view(
             ViewType.PATTERN,
-            {'pattern_num': new_pattern},
-            duration=1.5
+            {
+                'pattern_num': new_pattern,
+                'bpm': self.sequencer.bpm,
+                'steps': NUM_STEPS
+            },
+            duration=2.0
         )
         
         print(f"Patrón: {new_pattern}")
@@ -310,8 +304,12 @@ class DrumMachine:
         """Guardar patrón actual"""
         if self.sequencer.save_pattern():
             print(f"✓ Patrón {self.sequencer.current_pattern_id} guardado")
-            # Mostrar animación de guardado
-            self.view_manager.show_view(ViewType.SAVE, duration=1.5)
+            # Mostrar vista de guardado
+            self.view_manager.show_view(
+                ViewType.SAVE,
+                {'pattern_num': self.sequencer.current_pattern_id},
+                duration=1.5
+            )
             self.led_controller.pulse_led('white', 0.5)
         else:
             print("✗ Error guardando patrón")
@@ -369,35 +367,43 @@ class DrumMachine:
             self.selected_step = new_selected_step
             self.view_manager.register_interaction()
         
+        # Detectar cambios en BPM, SWING o VOL para trigger vista INFO
+        info_changed = False
+        
         # POT_TEMPO (1): BPM
         tempo_value = values[POT_TEMPO]
         new_bpm = int(BPM_MIN + tempo_value * (BPM_MAX - BPM_MIN))
         if abs(new_bpm - self.sequencer.bpm) > 2:
             self.sequencer.set_bpm(new_bpm)
-            # Trigger vista BPM
-            beat_pulse = self.sequencer.is_playing and (self.sequencer.current_step % 4 == 0)
-            self.view_manager.show_view(
-                ViewType.BPM,
-                {'bpm': new_bpm, 'beat_pulse': beat_pulse}
-            )
+            info_changed = True
         
         # POT_SWING (2): Swing
         swing_value = values[POT_SWING]
         new_swing = int(swing_value * 75)
         if abs(new_swing - self.sequencer.swing) > 2:
             self.sequencer.set_swing(new_swing)
-            # Trigger vista SWING
-            self.view_manager.show_view(
-                ViewType.SWING,
-                {'swing': new_swing}
-            )
+            info_changed = True
         
         # POT_MASTER (3): Master Volume
         master_vol = values[POT_MASTER]
         old_master = self.audio_engine.master_volume
         if abs(master_vol - old_master) > 0.05:
             self.audio_engine.set_master_volume(master_vol)
-            self._trigger_volume_view(values)
+            info_changed = True
+        
+        # Si cambió algo en INFO, mostrar vista INFO
+        if info_changed:
+            self.view_manager.show_view(
+                ViewType.INFO,
+                {
+                    'bpm': self.sequencer.bpm,
+                    'swing': self.sequencer.swing,
+                    'volume': int(self.audio_engine.master_volume * 100)
+                }
+            )
+        
+        # Detectar cambios en volúmenes grupales para trigger vista VOLUMES
+        volumes_changed = False
         
         # POT_VOL_DRUMS (4): Kick + Snare
         drums_vol = values[POT_VOL_DRUMS]
@@ -405,8 +411,8 @@ class DrumMachine:
         if abs(drums_vol - old_drums) > 0.05:
             self.audio_engine.set_instrument_volume(0, drums_vol)  # Kick
             self.audio_engine.set_instrument_volume(1, drums_vol)  # Snare
-            self._trigger_volume_view(values)
             self.prev_pot_values[POT_VOL_DRUMS] = drums_vol
+            volumes_changed = True
         
         # POT_VOL_HATS (5): CHH + OHH
         hats_vol = values[POT_VOL_HATS]
@@ -414,8 +420,8 @@ class DrumMachine:
         if abs(hats_vol - old_hats) > 0.05:
             self.audio_engine.set_instrument_volume(2, hats_vol)  # CHH
             self.audio_engine.set_instrument_volume(3, hats_vol)  # OHH
-            self._trigger_volume_view(values)
             self.prev_pot_values[POT_VOL_HATS] = hats_vol
+            volumes_changed = True
         
         # POT_VOL_TOMS (6): Tom1 + Tom2
         toms_vol = values[POT_VOL_TOMS]
@@ -423,8 +429,8 @@ class DrumMachine:
         if abs(toms_vol - old_toms) > 0.05:
             self.audio_engine.set_instrument_volume(4, toms_vol)  # Tom1
             self.audio_engine.set_instrument_volume(5, toms_vol)  # Tom2
-            self._trigger_volume_view(values)
             self.prev_pot_values[POT_VOL_TOMS] = toms_vol
+            volumes_changed = True
         
         # POT_VOL_CYMS (7): Crash + Ride
         cyms_vol = values[POT_VOL_CYMS]
@@ -432,21 +438,20 @@ class DrumMachine:
         if abs(cyms_vol - old_cyms) > 0.05:
             self.audio_engine.set_instrument_volume(6, cyms_vol)  # Crash
             self.audio_engine.set_instrument_volume(7, cyms_vol)  # Ride
-            self._trigger_volume_view(values)
             self.prev_pot_values[POT_VOL_CYMS] = cyms_vol
-    
-    def _trigger_volume_view(self, pot_values):
-        """Trigger vista de volumen con todos los valores"""
-        self.view_manager.show_view(
-            ViewType.VOLUME,
-            {
-                'master': pot_values[POT_MASTER],
-                'drums': pot_values[POT_VOL_DRUMS],
-                'hats': pot_values[POT_VOL_HATS],
-                'toms': pot_values[POT_VOL_TOMS],
-                'cyms': pot_values[POT_VOL_CYMS]
-            }
-        )
+            volumes_changed = True
+        
+        # Si cambió algún volumen, mostrar vista VOLUMES
+        if volumes_changed:
+            self.view_manager.show_view(
+                ViewType.VOLUMES,
+                {
+                    'drums': values[POT_VOL_DRUMS],
+                    'hats': values[POT_VOL_HATS],
+                    'toms': values[POT_VOL_TOMS],
+                    'cyms': values[POT_VOL_CYMS]
+                }
+            )
     
     # ===== LOOP PRINCIPAL =====
     
