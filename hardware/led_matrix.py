@@ -272,7 +272,7 @@ class LEDMatrix:
                     self.set_pixel(x, y, True)
         self.update()
     
-    # ===== FUENTE DE NÚMEROS 3x5 COMPACTA =====
+    # ===== FUENTE DE NÚMEROS Y LETRAS 3x5 =====
     
     def _get_digit_3x5(self, digit):
         """
@@ -298,6 +298,36 @@ class LEDMatrix:
         }
         return digits.get(str(digit), [])
     
+    def _get_letter_3x5(self, letter):
+        """
+        Obtener bitmap de una letra en formato 3x5 píxeles
+        
+        Args:
+            letter: Letra A-Z
+            
+        Returns:
+            Lista de tuplas (x, y) con píxeles a encender
+        """
+        letters = {
+            'B': [(0,0),(1,0),(2,0),(0,1),(2,1),(0,2),(1,2),(2,2),(0,3),(2,3),(0,4),(1,4),(2,4)],
+            'P': [(0,0),(1,0),(2,0),(0,1),(2,1),(0,2),(1,2),(2,2),(0,3),(0,4)],
+            'M': [(0,0),(2,0),(0,1),(1,1),(2,1),(0,2),(2,2),(0,3),(2,3),(0,4),(2,4)],
+            'S': [(0,0),(1,0),(2,0),(0,1),(0,2),(1,2),(2,2),(2,3),(0,4),(1,4),(2,4)],
+            'W': [(0,0),(2,0),(0,1),(2,1),(0,2),(1,2),(2,2),(0,3),(2,3),(0,4),(2,4)],
+            'G': [(0,0),(1,0),(2,0),(0,1),(0,2),(2,2),(0,3),(2,3),(0,4),(1,4),(2,4)],
+            'V': [(0,0),(2,0),(0,1),(2,1),(0,2),(2,2),(1,3),(1,4)],
+            'O': [(0,0),(1,0),(2,0),(0,1),(2,1),(0,2),(2,2),(0,3),(2,3),(0,4),(1,4),(2,4)],
+            'L': [(0,0),(0,1),(0,2),(0,3),(0,4),(1,4),(2,4)],
+            'D': [(0,0),(1,0),(0,1),(2,1),(0,2),(2,2),(0,3),(2,3),(0,4),(1,4)],
+            'R': [(0,0),(1,0),(2,0),(0,1),(2,1),(0,2),(1,2),(2,2),(0,3),(2,3),(0,4),(2,4)],
+            'H': [(0,0),(2,0),(0,1),(2,1),(0,2),(1,2),(2,2),(0,3),(2,3),(0,4),(2,4)],
+            'T': [(0,0),(1,0),(2,0),(1,1),(1,2),(1,3),(1,4)],
+            'C': [(0,0),(1,0),(2,0),(0,1),(0,2),(0,3),(0,4),(1,4),(2,4)],
+            'Y': [(0,0),(2,0),(0,1),(2,1),(1,2),(1,3),(1,4)],
+            'A': [(0,0),(1,0),(2,0),(0,1),(2,1),(0,2),(1,2),(2,2),(0,3),(2,3),(0,4),(2,4)],
+        }
+        return letters.get(letter.upper(), [])
+    
     def _draw_number(self, number, start_x, start_y):
         """
         Dibujar un número en la posición especificada
@@ -319,60 +349,98 @@ class LEDMatrix:
             elif char == ' ':
                 x_offset += 2
     
+    def _draw_text(self, text, start_x, start_y):
+        """
+        Dibujar texto usando fuente 3x5
+        
+        Args:
+            text: Texto a dibujar
+            start_x: Posición X inicial
+            start_y: Posición Y inicial
+        """
+        x_offset = start_x
+        
+        for char in text:
+            if char.isalpha():
+                pixels = self._get_letter_3x5(char)
+                for px, py in pixels:
+                    self.set_pixel(x_offset + px, start_y + py, True)
+                x_offset += 4  # 3 píxeles + 1 espacio
+            elif char.isdigit():
+                pixels = self._get_digit_3x5(char)
+                for px, py in pixels:
+                    self.set_pixel(x_offset + px, start_y + py, True)
+                x_offset += 4
+            elif char == ' ':
+                x_offset += 2
+    
     # ===== MÉTODOS DE RENDERIZADO DE VISTAS LIMPIAS =====
     
     def draw_bpm_view(self, bpm):
         """
-        Vista BPM: Solo número grande
-        Formato: 145
+        Vista BPM: Texto + número bien centrado
+        Formato: BPM 145 (centrado horizontal y verticalmente)
         
         Args:
             bpm: Tempo actual (60-200)
         """
         self.clear()
         
-        # Solo el número BPM centrado
-        self._draw_number(bpm, 11, 2)
+        # BPM: 3 letras = 11px, espacio = 2px, número 3 dígitos = 13px, total ~26px
+        # Centrado horizontal: (32 - 26) / 2 = 3
+        # Centrado vertical: Y=1 (filas 1-6 para contenido de 5px de alto)
+        
+        # Texto "BPM"
+        self._draw_text("BPM", 3, 2)
+        
+        # Número BPM
+        self._draw_number(bpm, 16, 2)
         
         self.update()
     
     def draw_swing_view(self, swing):
         """
-        Vista SWING: Solo número
-        Formato: 35
+        Vista SWING: Texto + número centrado
+        Formato: SWG 35
         
         Args:
             swing: Porcentaje de swing (0-75)
         """
         self.clear()
         
-        # Solo el número SWING centrado
-        self._draw_number(swing, 12, 2)
+        # SWG: 3 letras = 11px, espacio = 2px, número 2 dígitos = 9px, total ~22px
+        # Centrado: (32 - 22) / 2 = 5
+        
+        self._draw_text("SWG", 5, 2)
+        self._draw_number(swing, 18, 2)
         
         self.update()
     
     def draw_volume_view(self, volume):
         """
-        Vista VOLUME: Solo número
-        Formato: 87
+        Vista VOLUME: Texto + número centrado
+        Formato: VOL 87
         
         Args:
             volume: Volumen master (0-100)
         """
         self.clear()
         
-        # Solo el número VOL centrado
-        self._draw_number(volume, 12, 2)
+        # VOL: 3 letras = 11px, espacio = 2px, número 2-3 dígitos = 9-13px, total ~22-26px
+        # Centrado: X=3 (si es 3 dígitos) o X=5 (si es 2 dígitos)
+        
+        self._draw_text("VOL", 4, 2)
+        self._draw_number(volume, 17, 2)
         
         self.update()
     
     def draw_vol_group_view(self, group_name, volume):
         """
-        Vista de volumen grupal: Solo número
-        Formato: 90
+        Vista de volumen grupal: Label + número centrado
+        Formato: DR 90 (o HH/TM/CY)
         
         Args:
-            group_name: Nombre del grupo ('DR', 'HH', 'TM', 'CY') - no se muestra
+            group_name: Nombre del grupo ('DR', 'HH', 'TM', 'CY')
             volume: Volumen (0.0-1.0)
         """
         self.clear()
@@ -380,15 +448,18 @@ class LEDMatrix:
         # Convertir a porcentaje
         vol_percent = int(volume * 100)
         
-        # Solo el número grande centrado
-        self._draw_number(vol_percent, 12, 2)
+        # Label: 2 letras = 7px, espacio = 2px, número 2-3 dígitos = 9-13px, total ~18-22px
+        # Centrado: X=5 (para 2 dígitos) o X=3 (para 3 dígitos)
+        
+        self._draw_text(group_name, 6, 2)
+        self._draw_number(vol_percent, 17, 2)
         
         self.update()
     
     def draw_pattern_view(self, pattern_num, bpm, steps):
         """
-        Vista PATTERN: Solo número de patrón
-        Formato: 3
+        Vista PATTERN: Texto + número centrado
+        Formato: PAT 3
         
         Args:
             pattern_num: Número de patrón (1-8)
@@ -397,14 +468,17 @@ class LEDMatrix:
         """
         self.clear()
         
-        # Solo el número de patrón centrado
-        self._draw_number(pattern_num, 14, 2)
+        # PAT: 3 letras = 11px, espacio = 2px, número 1 dígito = 3px, total ~16px
+        # Centrado: (32 - 16) / 2 = 8
+        
+        self._draw_text("PAT", 8, 2)
+        self._draw_number(pattern_num, 21, 2)
         
         self.update()
     
     def draw_save_view(self, pattern_num):
         """
-        Vista SAVE: Solo número con checkmark
+        Vista SAVE: Número con checkmark centrado
         Formato: 3 ✓
         
         Args:
@@ -412,17 +486,20 @@ class LEDMatrix:
         """
         self.clear()
         
-        # Número de patrón centrado
-        self._draw_number(pattern_num, 11, 2)
+        # Número: 3px, espacio: 3px, checkmark: ~7px, total ~13px
+        # Centrado: (32 - 13) / 2 = 9
         
-        # Checkmark ✓ grande a la derecha
+        # Número de patrón
+        self._draw_number(pattern_num, 10, 2)
+        
+        # Checkmark ✓ a la derecha
+        self.set_pixel(16, 3, True)
+        self.set_pixel(17, 4, True)
+        self.set_pixel(18, 5, True)
+        self.set_pixel(19, 4, True)
         self.set_pixel(20, 3, True)
-        self.set_pixel(21, 4, True)
-        self.set_pixel(22, 5, True)
-        self.set_pixel(23, 4, True)
-        self.set_pixel(24, 3, True)
-        self.set_pixel(25, 2, True)
-        self.set_pixel(26, 1, True)
+        self.set_pixel(21, 2, True)
+        self.set_pixel(22, 1, True)
         
         self.update()
     
