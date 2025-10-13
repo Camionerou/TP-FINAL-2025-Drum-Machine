@@ -54,15 +54,15 @@ class DrumMachine:
             POT_VOL_CYMS: 1.0
         }
         
-        # Inicializar volúmenes al 100% por defecto
-        for i in range(8):
-            self.audio_engine.set_instrument_volume(i, 1.0)
-        
         print("\nInicializando componentes...")
         
         try:
             # Audio
             self.audio_engine = AudioEngine()
+            
+            # Inicializar todos los volúmenes al 100% por defecto
+            for i in range(8):
+                self.audio_engine.set_instrument_volume(i, 1.0)
             
             # Secuenciador
             self.sequencer = Sequencer(self.audio_engine)
