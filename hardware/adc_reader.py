@@ -95,9 +95,10 @@ class ADCReader:
     def read_all_channels(self):
         """
         Leer todos los canales
+        Si cualquier lectura es inválida, retorna 1.0 (100%)
         
         Returns:
-            Lista de 8 valores normalizados (0.0-1.0)
+            Lista de 8 valores normalizados (0.0-1.0), o 1.0 si lectura inválida
         """
         values = []
         for channel in range(8):
@@ -119,10 +120,15 @@ class ADCReader:
         return abs(new_value_raw - old_value) > ADC_THRESHOLD
     
     def get_channel_value(self, channel):
-        """Obtener último valor leído de un canal (0.0-1.0)"""
+        """
+        Obtener último valor leído de un canal (0.0-1.0)
+        Retorna 1.0 si la lectura es inválida
+        """
         if 0 <= channel < 8:
+            if self.current_values[channel] < ADC_MIN_VALID_VALUE:
+                return 1.0
             return self.current_values[channel] / ADC_MAX_VALUE
-        return 0.0
+        return 1.0  # Si canal inválido, retornar 100%
     
     def cleanup(self):
         """Cerrar conexión SPI"""
