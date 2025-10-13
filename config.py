@@ -65,6 +65,7 @@ POT_VOL_CYMS = 7        # Vol Crash + Ride (grupo cymbals)
 # Configuración ADC
 ADC_MAX_VALUE = 1023
 ADC_THRESHOLD = 10       # Cambio mínimo para considerar un ajuste
+ADC_MIN_VALID_VALUE = 5  # Valor mínimo para considerar lectura válida (debajo = usar default 100%)
 
 # ===== CONSTANTES DE DISPLAY =====
 

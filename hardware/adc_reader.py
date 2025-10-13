@@ -15,7 +15,7 @@ except ImportError:
         def close(self): pass
     spidev = type('spidev', (), {'SpiDev': MockSpiDev})()
 
-from config import SPI_MCP3008_CE, ADC_MAX_VALUE, ADC_THRESHOLD
+from config import SPI_MCP3008_CE, ADC_MAX_VALUE, ADC_THRESHOLD, ADC_MIN_VALID_VALUE
 
 
 class ADCReader:
@@ -67,14 +67,20 @@ class ADCReader:
     def read_channel(self, channel):
         """
         Leer canal con suavizado
+        Si el valor es muy bajo (ruido/desconectado), retorna 1.0 (100%)
         
         Args:
             channel: Canal a leer (0-7)
             
         Returns:
-            Valor normalizado (0.0-1.0)
+            Valor normalizado (0.0-1.0), o 1.0 si lectura inválida
         """
         raw_value = self._read_channel_raw(channel)
+        
+        # Si el valor es menor al mínimo válido, retornar 100%
+        # Esto maneja potenciómetros desconectados o con ruido
+        if raw_value < ADC_MIN_VALID_VALUE:
+            return 1.0
         
         # Aplicar suavizado simple (promedio con valor anterior)
         smoothed = (raw_value + self.previous_values[channel]) // 2

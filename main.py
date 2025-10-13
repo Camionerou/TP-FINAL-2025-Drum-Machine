@@ -46,13 +46,17 @@ class DrumMachine:
         self.solo_instrument = None
         
         # Valores anteriores de potenciómetros para detectar cambios
-        # Inicializar con valores por defecto muy diferentes para forzar primera detección
+        # Inicializar con 1.0 (100%) para que todos los volúmenes estén al máximo por defecto
         self.prev_pot_values = {
-            POT_VOL_DRUMS: -1.0,
-            POT_VOL_HATS: -1.0,
-            POT_VOL_TOMS: -1.0,
-            POT_VOL_CYMS: -1.0
+            POT_VOL_DRUMS: 1.0,
+            POT_VOL_HATS: 1.0,
+            POT_VOL_TOMS: 1.0,
+            POT_VOL_CYMS: 1.0
         }
+        
+        # Inicializar volúmenes al 100% por defecto
+        for i in range(8):
+            self.audio_engine.set_instrument_volume(i, 1.0)
         
         print("\nInicializando componentes...")
         
