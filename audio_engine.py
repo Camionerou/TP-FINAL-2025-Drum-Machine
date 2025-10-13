@@ -7,7 +7,8 @@ import pygame
 import os
 from config import (
     INSTRUMENTS, SAMPLES_DIR, SAMPLE_RATE, AUDIO_BUFFER_SIZE, 
-    AUDIO_CHANNELS, MASTER_VOLUME_DEFAULT, INSTRUMENT_VOLUME_DEFAULT
+    AUDIO_CHANNELS, MASTER_VOLUME_DEFAULT, INSTRUMENT_VOLUME_DEFAULT,
+    AUDIO_GAIN_BOOST
 )
 
 
@@ -29,6 +30,7 @@ class AudioEngine:
         # Volúmenes
         self.master_volume = MASTER_VOLUME_DEFAULT
         self.instrument_volumes = [INSTRUMENT_VOLUME_DEFAULT] * len(INSTRUMENTS)
+        self.gain_boost = AUDIO_GAIN_BOOST  # Ganancia adicional
         
         # Cargar samples
         self.samples = {}
@@ -64,11 +66,14 @@ class AudioEngine:
         if instrument_id not in self.samples or self.samples[instrument_id] is None:
             return
         
-        # Calcular volumen final
+        # Calcular volumen final con ganancia boost
         if volume is None:
             volume = self.instrument_volumes[instrument_id]
         
-        final_volume = volume * self.master_volume
+        final_volume = volume * self.master_volume * self.gain_boost
+        
+        # Limitar a 1.0 máximo para evitar distorsión en pygame
+        final_volume = min(1.0, final_volume)
         
         # Reproducir el sample
         sound = self.samples[instrument_id]

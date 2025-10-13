@@ -118,6 +118,7 @@ LONG_HOLD_TIME = 3.0     # Tiempo para hold largo (clear completo, etc)
 
 # ===== CONFIGURACIÓN DE VOLUMEN =====
 
-MASTER_VOLUME_DEFAULT = 0.8
+MASTER_VOLUME_DEFAULT = 1.0          # Volumen master al máximo
 INSTRUMENT_VOLUME_DEFAULT = 1.0
+AUDIO_GAIN_BOOST = 2.0               # Multiplicador de ganancia (1.0 = normal, 2.0 = doble)
 
