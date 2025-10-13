@@ -5,11 +5,13 @@ Maneja la carga y reproducción de samples de batería
 
 import pygame
 import os
+import numpy as np
 from config import (
     INSTRUMENTS, SAMPLES_DIR, SAMPLE_RATE, AUDIO_BUFFER_SIZE, 
     AUDIO_CHANNELS, MASTER_VOLUME_DEFAULT, INSTRUMENT_VOLUME_DEFAULT,
     AUDIO_GAIN_BOOST
 )
+from audio_processor import AudioProcessor
 
 
 class AudioEngine:
@@ -30,13 +32,17 @@ class AudioEngine:
         # Volúmenes
         self.master_volume = MASTER_VOLUME_DEFAULT
         self.instrument_volumes = [INSTRUMENT_VOLUME_DEFAULT] * len(INSTRUMENTS)
-        self.gain_boost = AUDIO_GAIN_BOOST  # Ganancia adicional
+        
+        # Procesador de audio
+        self.processor = AudioProcessor()
+        self.processor.set_master_gain(AUDIO_GAIN_BOOST)
         
         # Cargar samples
         self.samples = {}
         self._load_samples()
         
         print(f"Audio Engine inicializado: {SAMPLE_RATE}Hz, buffer {AUDIO_BUFFER_SIZE}")
+        print(f"AudioProcessor: Ganancia master {AUDIO_GAIN_BOOST}x, Limitador activo")
     
     def _load_samples(self):
         """Cargar todos los samples de audio desde el directorio"""
@@ -57,7 +63,7 @@ class AudioEngine:
     
     def play_sample(self, instrument_id, volume=None):
         """
-        Reproducir un instrumento
+        Reproducir un instrumento con procesamiento de audio
         
         Args:
             instrument_id: ID del instrumento (0-7)
@@ -66,39 +72,50 @@ class AudioEngine:
         if instrument_id not in self.samples or self.samples[instrument_id] is None:
             return
         
-        # Calcular volumen final con ganancia boost
+        # Calcular volumen final
         if volume is None:
             volume = self.instrument_volumes[instrument_id]
         
-        final_volume = volume * self.master_volume * self.gain_boost
+        final_volume = volume * self.master_volume
         
-        # Limitar a 1.0 máximo para evitar distorsión en pygame
-        final_volume = min(1.0, final_volume)
+        # Obtener sample original
+        original_sound = self.samples[instrument_id]
         
-        # Reproducir el sample
-        sound = self.samples[instrument_id]
-        sound.set_volume(final_volume)
-        sound.play()
+        # Procesar con AudioProcessor (aplica ganancia y limitador)
+        try:
+            processed_sound = self.processor.process_sample(
+                original_sound,
+                final_volume,
+                gain=1.0
+            )
+            processed_sound.play()
+        except Exception as e:
+            # Fallback: reproducir sin procesamiento
+            print(f"Error procesando audio: {e}, usando fallback")
+            original_sound.set_volume(min(1.0, final_volume))
+            original_sound.play()
     
     def set_master_volume(self, volume):
         """
         Establecer volumen master
+        Ahora puede ser > 1.0 gracias al procesador
         
         Args:
-            volume: Volumen (0.0-1.0)
+            volume: Volumen (0.0-2.0 o más)
         """
-        self.master_volume = max(0.0, min(1.0, volume))
+        self.master_volume = max(0.0, min(2.0, volume))
     
     def set_instrument_volume(self, instrument_id, volume):
         """
         Establecer volumen de un instrumento específico
+        Ahora puede ser > 1.0
         
         Args:
             instrument_id: ID del instrumento (0-7)
-            volume: Volumen (0.0-1.0)
+            volume: Volumen (0.0-2.0 o más)
         """
         if 0 <= instrument_id < len(INSTRUMENTS):
-            self.instrument_volumes[instrument_id] = max(0.0, min(1.0, volume))
+            self.instrument_volumes[instrument_id] = max(0.0, min(2.0, volume))
     
     def get_instrument_volume(self, instrument_id):
         """Obtener volumen de un instrumento"""
