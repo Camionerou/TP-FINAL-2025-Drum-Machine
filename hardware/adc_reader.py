@@ -67,20 +67,14 @@ class ADCReader:
     def read_channel(self, channel):
         """
         Leer canal con suavizado
-        Si el valor es muy bajo (ruido/desconectado), retorna 1.0 (100%)
         
         Args:
             channel: Canal a leer (0-7)
             
         Returns:
-            Valor normalizado (0.0-1.0), o 1.0 si lectura inválida
+            Valor normalizado (0.0-1.0)
         """
         raw_value = self._read_channel_raw(channel)
-        
-        # Si el valor es menor al mínimo válido, retornar 100%
-        # Esto maneja potenciómetros desconectados o con ruido
-        if raw_value < ADC_MIN_VALID_VALUE:
-            return 1.0
         
         # Aplicar suavizado simple (promedio con valor anterior)
         smoothed = (raw_value + self.previous_values[channel]) // 2
@@ -95,10 +89,9 @@ class ADCReader:
     def read_all_channels(self):
         """
         Leer todos los canales
-        Si cualquier lectura es inválida, retorna 1.0 (100%)
         
         Returns:
-            Lista de 8 valores normalizados (0.0-1.0), o 1.0 si lectura inválida
+            Lista de 8 valores normalizados (0.0-1.0)
         """
         values = []
         for channel in range(8):
@@ -120,15 +113,10 @@ class ADCReader:
         return abs(new_value_raw - old_value) > ADC_THRESHOLD
     
     def get_channel_value(self, channel):
-        """
-        Obtener último valor leído de un canal (0.0-1.0)
-        Retorna 1.0 si la lectura es inválida
-        """
+        """Obtener último valor leído de un canal (0.0-1.0)"""
         if 0 <= channel < 8:
-            if self.current_values[channel] < ADC_MIN_VALID_VALUE:
-                return 1.0
             return self.current_values[channel] / ADC_MAX_VALUE
-        return 1.0  # Si canal inválido, retornar 100%
+        return 0.0
     
     def cleanup(self):
         """Cerrar conexión SPI"""
