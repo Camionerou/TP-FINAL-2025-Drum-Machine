@@ -163,11 +163,13 @@ Estructura modular implementada:
 
 **Especificaciones v2.5 (Estado Actual):**
 - Todo lo de v2.0
-- Tap Tempo: ✅
-- Bluetooth: ✅
-- MIDI: ✅
-- Autoarranque: ✅
-- Código modular: ✅
+- Tap Tempo: ✅ Integrado
+- Bluetooth: ✅ Reconexión automática
+- MIDI: ✅ Clock + Notes
+- Efectos Master: ✅ Reverb, Delay, Compressor, Filter, Saturation
+- Autoarranque: ✅ Systemd
+- Boot optimizado: ✅ 33% más rápido
+- Código modular: ✅ core/, ui/, features/, hardware/
 
 ---
 
@@ -907,24 +909,30 @@ Ver archivo `PINOUT.txt` en el repositorio para diagrama detallado ASCII art.
 
 ### Commits Recientes (15 de Octubre de 2025)
 
+**Commit 3098504** - feat: Implement master effects system
+- Sistema de efectos master (Reverb, Delay, Compressor, Filter, Saturation)
+- Vista EFFECTS con barras para cada efecto
+- Control: Hold BTN 12, ajustar con Pots 0-4
+- Integrado en cadena de procesamiento de audio
+
+**Commit 662370c** - docs: Add comprehensive session summary
+
+**Commit 858bd66** - docs: Update technical report with v2.5 features
+
 **Commit 1eb47b9** - feat: Add Tap Tempo and Bluetooth Audio support
-- Tap Tempo completamente integrado
-- Bluetooth Audio con reconexión automática
-- MIDI Output funcional
-- Optimize_boot actualizado
+- Tap Tempo: Doble-click BTN 11
+- Bluetooth: Reconexión automática
+- MIDI Output integrado
 
 **Commit 6807fcd** - refactor: Reorganize codebase into modular structure  
 - 48 archivos reorganizados
-- Estructura modular core/, ui/, features/, hardware/
-- Paths actualizados: data/samples, data/patterns
-- main.py simplificado
+- Estructura: core/, ui/, features/, hardware/, data/, scripts/, docs/
 
-**Commit 07f8b70** - docs: Consolidate documentation and add tap tempo feature
-- 11 archivos de documentación eliminados
+**Commit 07f8b70** - docs: Consolidate documentation
+- 11 archivos redundantes eliminados
 - Informe técnico unificado
-- README simplificado
 
-**Total de commits en el proyecto:** 28
+**Total de commits en el proyecto:** 32
 
 ---
 
