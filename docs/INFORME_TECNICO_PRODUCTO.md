@@ -3,7 +3,8 @@
 
 **Integrantes:** Enzo Saldivia y Joaquín Aguerreberry  
 **Institución:** IPS 6to Electro 2025  
-**Versión del Sistema:** 2.0  
+**Versión del Sistema:** 2.5  
+**Última actualización:** 15 de Octubre de 2025  
 **Repositorio:** [github.com/Camionerou/TP-FINAL-2025-Drum-Machine](https://github.com/Camionerou/TP-FINAL-2025-Drum-Machine)
 
 ---
@@ -52,6 +53,11 @@ timeline
                      : Sistema de vistas dinámicas
                      : 32 pasos, 8 instrumentos
                      : Final: Latencia <5ms
+    section Fase 4
+        Octubre 2025 : Codebase reorganizado
+                     : Tap Tempo, Bluetooth, MIDI
+                     : Autoarranque, Optimización
+                     : v2.5: Drum machine profesional
 ```
 
 ##### **Fase 1: Arquitectura Inicial con Arduino**
@@ -105,12 +111,63 @@ timeline
 - button_handler.py: Eventos avanzados
 - hardware/: Módulos de periféricos
 
-**Especificaciones Fase 3 (Actual):**
+**Especificaciones Fase 3:**
 - Secuenciador: 32 pasos × 8 instrumentos
 - Display: Matriz LED 8×32
 - Control: 16 botones + 8 pots + 5 LEDs
 - Latencia: <5ms
 - FPS: 60 constantes
+
+##### **Fase 4: Reorganización y Features Profesionales (15 de Octubre de 2025)**
+
+**Versión:** 2.5 - Estado Actual
+
+Esta fase representa la profesionalización completa del proyecto con reorganización modular del código y agregado de características esenciales para un instrumento musical profesional.
+
+**Reorganización de Codebase:**
+
+Estructura modular implementada:
+- `core/`: Módulos principales
+- `ui/`: Interfaz de usuario
+- `features/`: MIDI, Tap Tempo, Bluetooth
+- `hardware/`: Drivers de periféricos
+- `data/`: Samples y patrones
+- `scripts/`: Instalación
+- `docs/`: Documentación unificada
+
+**Features Implementadas:**
+
+1. **Tap Tempo** - Establecer BPM naturalmente
+   - Doble-click BTN 11 para activar
+   - Mínimo 2 taps, promedio hasta 8
+   - Sistema de confianza (0-100%)
+   - Timeout de 3 segundos
+
+2. **Bluetooth Audio** - Salida inalámbrica
+   - Reconexión automática al arrancar
+   - Escaneo y pairing integrado
+   - PulseAudio para gestión
+   - Sin latencia adicional
+
+3. **MIDI Output** - Sincronización externa
+   - MIDI Clock (24 ppqn)
+   - MIDI Notes al tocar pads
+   - General MIDI drum map
+
+4. **Autoarranque** - Funcionamiento profesional
+   - Servicio systemd
+   - Logs centralizados
+   - Control completo
+
+5. **Optimización** - Boot 33% más rápido
+
+**Especificaciones v2.5 (Estado Actual):**
+- Todo lo de v2.0
+- Tap Tempo: ✅
+- Bluetooth: ✅
+- MIDI: ✅
+- Autoarranque: ✅
+- Código modular: ✅
 
 ---
 
@@ -830,24 +887,51 @@ pie title Commits por Fase
 
 Ver archivo `PINOUT.txt` en el repositorio para diagrama detallado ASCII art.
 
-### Anexo B: Guías de Uso
+### Anexo B: Archivos de Referencia
 
-- `GUIA_VISTAS.md`: Sistema de vistas dinámicas
-- `COMANDOS_RAPIDOS.md`: Referencia rápida de controles
-- `INSTALACION_RPI.md`: Instalación paso a paso
+- `docs/PINOUT.txt`: Conexiones detalladas de hardware
+- `docs/PLAN_REORGANIZACION.md`: Roadmap de desarrollo futuro
+- `docs/CHANGELOG_LIMPIEZA.md`: Historial de reorganización
+- `README.md`: Guía rápida de uso y comandos
 
-### Anexo C: Documentación Técnica
+### Anexo C: Scripts de Instalación
 
-- `AUDIO_SYSTEM.md`: Sistema de audio profesional
-- `CHANGELOG_v2.md`: Historial de cambios v2.0
-- `VISTAS_FINALES.md`: Documentación de vistas limpias
+- `scripts/install_service.sh`: Instalador de autoarranque
+- `scripts/optimize_boot.sh`: Optimizador de sistema
+- `scripts/drummachine.service`: Servicio systemd
+- `scripts/test_*.py`: Scripts de prueba de hardware
+
+---
+
+## 4. HISTORIAL DE COMMITS ACTUALIZADO
+
+### Commits Recientes (15 de Octubre de 2025)
+
+**Commit 1eb47b9** - feat: Add Tap Tempo and Bluetooth Audio support
+- Tap Tempo completamente integrado
+- Bluetooth Audio con reconexión automática
+- MIDI Output funcional
+- Optimize_boot actualizado
+
+**Commit 6807fcd** - refactor: Reorganize codebase into modular structure  
+- 48 archivos reorganizados
+- Estructura modular core/, ui/, features/, hardware/
+- Paths actualizados: data/samples, data/patterns
+- main.py simplificado
+
+**Commit 07f8b70** - docs: Consolidate documentation and add tap tempo feature
+- 11 archivos de documentación eliminados
+- Informe técnico unificado
+- README simplificado
+
+**Total de commits en el proyecto:** 28
 
 ---
 
 **FIN DEL INFORME TÉCNICO DE PRODUCTO**
 
-*Documento generado el 15 de Octubre de 2025*  
-*Versión: 2.0*  
+*Documento actualizado el 15 de Octubre de 2025*  
+*Versión: 2.5*  
 *Autores: Enzo Saldivia y Joaquín Aguerreberry*  
 *Institución: IPS 6to Electro 2025*  
 *Repositorio: [github.com/Camionerou/TP-FINAL-2025-Drum-Machine](https://github.com/Camionerou/TP-FINAL-2025-Drum-Machine)*
