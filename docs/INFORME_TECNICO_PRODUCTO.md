@@ -258,6 +258,8 @@ numpy==1.24.3          # Procesamiento DSP
 
 **Potenciómetros:**
 
+**Modo Normal:**
+
 | Pot | Función | Rango | Vista |
 |-----|---------|-------|-------|
 | 0 | Scroll pasos | 0-31 | SEQUENCER |
@@ -269,6 +271,16 @@ numpy==1.24.3          # Procesamiento DSP
 | 6 | Vol Toms | 0-200% | VOL_TOMS |
 | 7 | Vol Cymbals | 0-200% | VOL_CYMS |
 
+**Modo EFFECTS (Hold BTN 12):**
+
+| Pot | Efecto | Rango | Descripción |
+|-----|--------|-------|-------------|
+| 0 | Reverb | 0-100% | Ambiente (sala/plate/hall) |
+| 1 | Delay | 0-500ms | Echo con feedback |
+| 2 | Compressor | Ratio 1-10 | Compresión dinámica |
+| 3 | Filter | 200Hz-8kHz | Low-pass cutoff |
+| 4 | Saturation | 0-100% | Distorsión armónica |
+
 **Botones:**
 
 | ID | Función Simple | Doble-Click | Hold |
@@ -277,8 +289,8 @@ numpy==1.24.3          # Procesamiento DSP
 | 8 | Play/Stop | Reset paso 0 | - |
 | 9 | Cambiar Modo | - | Bloquear modo (2s) |
 | 10 | Patrón - | - | Scroll rápido |
-| 11 | Patrón + | - | Scroll rápido |
-| 12 | Clear paso | Clear instr. | Clear todo (3s) |
+| 11 | Patrón + / **Tap Tempo** | **Activar Tap** | Scroll rápido |
+| 12 | Clear paso | Clear instr. | **Vista EFFECTS (1s)** / Clear todo (3s) |
 | 13 | Save | - | +10/11: Save específico |
 | 14 | Copy | - | +10/11: Paste |
 | 15 | Mute | Solo | +0-7: Mute global |
@@ -310,6 +322,7 @@ numpy==1.24.3          # Procesamiento DSP
 | **VOL_CYMS** | Pot 7 | 1s | "C" + número + barra |
 | **PATTERN** | BTN 10/11 | 1.5s | Número grande del patrón |
 | **SAVE** | BTN 13 | 1.5s | Animación + checkmark |
+| **EFFECTS** | Hold BTN 12 | Permanente | 5 barras: R D C F S (efectos) |
 
 ---
 
