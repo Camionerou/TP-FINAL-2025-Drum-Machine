@@ -13,15 +13,17 @@ if [ "$EUID" -ne 0 ]; then
 fi
 
 echo ""
-echo "🚀 Deshabilitando servicios innecesarios..."
+echo "🚀 Optimizando servicios..."
 
-# Deshabilitar servicios que no son necesarios para drum machine
-systemctl disable bluetooth.service 2>/dev/null
-systemctl disable hciuart.service 2>/dev/null
+# NOTA: Bluetooth se mantiene habilitado para salida de audio inalámbrica
+# Solo deshabilitar servicios realmente innecesarios
 systemctl disable avahi-daemon.service 2>/dev/null
 systemctl disable triggerhappy.service 2>/dev/null
 
-echo "✅ Servicios deshabilitados"
+# Asegurar que Bluetooth esté habilitado
+systemctl enable bluetooth.service 2>/dev/null
+
+echo "✅ Servicios optimizados (Bluetooth habilitado)"
 
 echo ""
 echo "⚡ Optimizando configuración de boot..."

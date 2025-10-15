@@ -20,6 +20,7 @@ from .audio_engine import AudioEngine
 from .sequencer import Sequencer
 from hardware import ButtonMatrix, LEDMatrix, ADCReader, LEDController
 from ui import ViewManager, ViewType, ButtonHandler
+from features import TapTempo, MIDIHandler, BluetoothAudio
 
 
 class DrumMachine:
@@ -43,6 +44,10 @@ class DrumMachine:
         # Estado de mute/solo
         self.muted_instruments = set()
         self.solo_instrument = None
+        
+        # Tap Tempo
+        self.tap_tempo = TapTempo(min_taps=2, max_taps=6, timeout=3.0)
+        self.tap_tempo_active = False
         
         # Valores anteriores de potenciómetros para detectar cambios
         # Inicializar con 1.0 (100%) para que todos los volúmenes estén al máximo por defecto
@@ -83,6 +88,32 @@ class DrumMachine:
                 double_click_time=DOUBLE_CLICK_TIME,
                 hold_time=HOLD_TIME
             )
+            
+            # MIDI Handler (opcional)
+            try:
+                self.midi = MIDIHandler(enable_clock=True, enable_notes=True)
+                if self.midi.enabled:
+                    print("✓ MIDI Output habilitado")
+                else:
+                    self.midi = None
+            except Exception as e:
+                print(f"⚠️ MIDI no disponible: {e}")
+                self.midi = None
+            
+            # Bluetooth Audio (opcional)
+            try:
+                self.bluetooth = BluetoothAudio()
+                if self.bluetooth.enabled:
+                    print("✓ Bluetooth disponible")
+                    # Intentar reconectar al último dispositivo automáticamente
+                    print("🔄 Intentando reconectar a último dispositivo Bluetooth...")
+                    if self.bluetooth.quick_connect_last():
+                        print("✓ Reconectado a Bluetooth automáticamente")
+                else:
+                    self.bluetooth = None
+            except Exception as e:
+                print(f"⚠️ Bluetooth no disponible: {e}")
+                self.bluetooth = None
             
             # Registrar callbacks de botones
             self.button_handler.register_callbacks(
@@ -134,9 +165,14 @@ class DrumMachine:
         elif button_id == BTN_PATTERN_PREV:
             self._handle_pattern_change(-1)
         
-        # Botón 11: PATTERN_NEXT
+        # Botón 11: PATTERN_NEXT / TAP TEMPO
         elif button_id == BTN_PATTERN_NEXT:
-            self._handle_pattern_change(1)
+            if self.tap_tempo_active:
+                # En modo tap, registrar tap
+                self._handle_tap()
+            else:
+                # Modo normal, cambiar patrón
+                self._handle_pattern_change(1)
         
         # Botón 12: CLEAR
         elif button_id == BTN_CLEAR:
@@ -163,6 +199,10 @@ class DrumMachine:
         if button_id == BTN_PLAY_STOP:
             self.sequencer.current_step = 0
             print("Secuenciador reseteado a paso 0")
+        
+        # BTN 11: PATTERN_NEXT → Doble click: Activar Tap Tempo
+        elif button_id == BTN_PATTERN_NEXT:
+            self._activate_tap_tempo()
         
         # BTN 12: CLEAR → Doble: Clear instrumento en todos los pasos
         elif button_id == BTN_CLEAR:
@@ -250,6 +290,10 @@ class DrumMachine:
             # Modo PAD: Tocar instrumento
             if instrument_id not in self.muted_instruments:
                 self.audio_engine.play_sample(instrument_id)
+                
+                # MIDI note out
+                if self.midi and self.midi.enabled:
+                    self.midi.send_note_on(INSTRUMENTS[instrument_id], velocity=127)
             
             # LED azul parpadea
             self.led_controller.pulse_led('blue', 0.1)
@@ -259,9 +303,62 @@ class DrumMachine:
             self.sequencer.toggle_step(self.selected_step, instrument_id)
             print(f"Toggle: Paso {self.selected_step}, {INSTRUMENTS[instrument_id]}")
     
+    def _activate_tap_tempo(self):
+        """Activar modo Tap Tempo"""
+        self.tap_tempo_active = True
+        self.tap_tempo.reset()
+        print("\n🎵 TAP TEMPO ACTIVADO - Golpea BTN 11 al ritmo deseado")
+        self.led_controller.pulse_led('yellow', 0.2)
+    
+    def _handle_tap(self):
+        """Manejar tap en modo Tap Tempo"""
+        if not self.tap_tempo_active:
+            return
+        
+        # Registrar tap y obtener BPM
+        bpm = self.tap_tempo.tap()
+        tap_count = self.tap_tempo.get_tap_count()
+        
+        # Feedback visual
+        self.led_controller.pulse_led('blue', 0.1)
+        
+        if bpm is not None:
+            # Actualizar BPM
+            self.sequencer.set_bpm(bpm)
+            confidence = self.tap_tempo.get_confidence()
+            print(f"  Tap {tap_count}: BPM = {bpm} (confianza: {confidence:.0%})")
+            
+            # Mostrar vista BPM
+            self.view_manager.show_view(
+                ViewType.BPM,
+                {'bpm': bpm}
+            )
+        else:
+            print(f"  Tap {tap_count}: Necesitas {self.tap_tempo.min_taps - tap_count} tap(s) más")
+        
+        # Desactivar después de timeout o si tenemos suficientes taps
+        if tap_count >= 4:
+            # Suficientes taps, desactivar
+            import threading
+            def deactivate_later():
+                import time
+                time.sleep(2.0)
+                self.tap_tempo_active = False
+                print("✓ Tap Tempo desactivado - BPM establecido")
+            
+            threading.Thread(target=deactivate_later, daemon=True).start()
+    
     def _handle_play_stop(self):
         """Play/Stop secuenciador"""
         self.sequencer.toggle_play()
+        
+        # MIDI start/stop
+        if self.midi and self.midi.enabled:
+            if self.sequencer.is_playing:
+                self.midi.send_start()
+            else:
+                self.midi.send_stop()
+        
         self._update_playing_led()
         print(f"Secuenciador: {'PLAY' if self.sequencer.is_playing else 'STOP'}")
     
@@ -538,6 +635,14 @@ class DrumMachine:
         
         if hasattr(self, 'audio_engine'):
             self.audio_engine.cleanup()
+        
+        if hasattr(self, 'midi') and self.midi:
+            self.midi.cleanup()
+        
+        if hasattr(self, 'bluetooth') and self.bluetooth:
+            if self.bluetooth.is_connected():
+                print("Desconectando Bluetooth...")
+                self.bluetooth.disconnect()
         
         if hasattr(self, 'led_controller'):
             self.led_controller.cleanup()
