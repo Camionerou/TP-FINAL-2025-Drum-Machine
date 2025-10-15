@@ -503,9 +503,40 @@ class LEDMatrix:
         
         self.update()
     
+    def draw_effects_view(self, effects_status):
+        """
+        Vista EFFECTS: 5 barras verticales para cada efecto
+        R|D|C|F|S (Reverb, Delay, Comp, Filter, Sat)
+        
+        Args:
+            effects_status: Dict con niveles (0-100) de cada efecto
+        """
+        self.clear()
+        
+        # 5 efectos, cada uno 6 cols de ancho, 1 col de espacio = 32 total
+        effect_names = ['R', 'D', 'C', 'F', 'S']
+        effect_keys = ['reverb', 'delay', 'compressor', 'filter', 'saturation']
+        
+        for idx, (name, key) in enumerate(zip(effect_names, effect_keys)):
+            x_start = idx * 6
+            level = effects_status.get(key, 0)
+            
+            # Letra del efecto (fila 0)
+            self._draw_letter(name, 0, x_start + 2)
+            
+            # Barra vertical (8 filas de altura)
+            bar_height = int((level / 100.0) * 6)  # Máximo 6 filas (2-7)
+            
+            for row in range(6):
+                for col in range(5):  # 5 cols de ancho
+                    pixel_on = (5 - row) < bar_height
+                    self.set_pixel(row + 2, x_start + col, pixel_on)
+        
+        self.update()
+    
     def cleanup(self):
         """Limpiar y apagar display"""
         self.clear()
-        self._write_all(REG_SHUTDOWN, 0x00)  # Apagar display
+        self._write_all(REG_SHUTDOWN, 0x00)
         self.spi.close()
 

@@ -10,15 +10,16 @@ from enum import Enum
 class ViewType(Enum):
     """Tipos de vistas disponibles"""
     SEQUENCER = "sequencer"
-    BPM = "bpm"            # Vista de tempo
-    SWING = "swing"        # Vista de swing
-    VOLUME = "volume"      # Vista de volumen master
-    VOL_DRUMS = "vol_drums"   # Vista volumen Drums
-    VOL_HATS = "vol_hats"     # Vista volumen Hats
-    VOL_TOMS = "vol_toms"     # Vista volumen Toms
-    VOL_CYMS = "vol_cyms"     # Vista volumen Cymbals
-    PATTERN = "pattern"    # Info detallada de patrón
-    SAVE = "save"         # Confirmación de guardado
+    BPM = "bpm"
+    SWING = "swing"
+    VOLUME = "volume"
+    VOL_DRUMS = "vol_drums"
+    VOL_HATS = "vol_hats"
+    VOL_TOMS = "vol_toms"
+    VOL_CYMS = "vol_cyms"
+    PATTERN = "pattern"
+    SAVE = "save"
+    EFFECTS = "effects"
 
 
 class ViewManager:
@@ -189,4 +190,9 @@ class ViewManager:
             # Vista de confirmación de guardado
             pattern_num = self.view_data.get('pattern_num', 1)
             led_matrix.draw_save_view(pattern_num)
+        
+        elif self.current_view == ViewType.EFFECTS:
+            # Vista de efectos master
+            effects_status = self.view_data.get('effects', {})
+            led_matrix.draw_effects_view(effects_status)
 

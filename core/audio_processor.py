@@ -6,17 +6,30 @@ Permite control fino de volumen, ganancia, limitador y futuros efectos
 import numpy as np
 import pygame
 
+try:
+    from features.effects_manager import EffectsManager
+    EFFECTS_AVAILABLE = True
+except ImportError:
+    EFFECTS_AVAILABLE = False
+    print("⚠️ EffectsManager no disponible")
+
 
 class AudioProcessor:
     """Procesador de audio con ganancia, limitador y efectos"""
     
     def __init__(self):
         """Inicializar procesador de audio"""
-        self.master_gain = 2.0      # Ganancia master (puede ser > 1.0)
-        self.limiter_threshold = 0.95  # Threshold del limitador
+        self.master_gain = 2.0
+        self.limiter_threshold = 0.95
         self.limiter_enabled = True
         
-        print("AudioProcessor inicializado")
+        # Effects manager
+        if EFFECTS_AVAILABLE:
+            self.effects = EffectsManager(sample_rate=44100)
+            print("AudioProcessor + EffectsManager inicializados")
+        else:
+            self.effects = None
+            print("AudioProcessor inicializado (sin efectos)")
     
     def apply_gain(self, audio_data, gain):
         """
@@ -95,6 +108,10 @@ class AudioProcessor:
                 processed = self.soft_limiter(processed, self.limiter_threshold)
             else:
                 processed = self.hard_limiter(processed, 1.0)
+            
+            # Aplicar efectos master si están disponibles y activos
+            if self.effects and self.effects.has_active_effects():
+                processed = self.effects.process(processed)
             
             # Convertir de vuelta a int16
             if sound_array.dtype == np.int16:

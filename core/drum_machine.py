@@ -49,6 +49,9 @@ class DrumMachine:
         self.tap_tempo = TapTempo(min_taps=2, max_taps=6, timeout=3.0)
         self.tap_tempo_active = False
         
+        # Effects view mode
+        self.effects_view_active = False
+        
         # Valores anteriores de potenciómetros para detectar cambios
         # Inicializar con 1.0 (100%) para que todos los volúmenes estén al máximo por defecto
         self.prev_pot_values = {
@@ -174,9 +177,10 @@ class DrumMachine:
                 # Modo normal, cambiar patrón
                 self._handle_pattern_change(1)
         
-        # Botón 12: CLEAR
+        # Botón 12: CLEAR (click simple) o EFFECTS (hold)
         elif button_id == BTN_CLEAR:
-            self._handle_clear_step()
+            if not self.effects_view_active:
+                self._handle_clear_step()
         
         # Botón 13: SAVE
         elif button_id == BTN_SAVE:
@@ -225,16 +229,26 @@ class DrumMachine:
             print(f"Modo {status}")
             self.led_controller.pulse_led('white' if self.mode_locked else 'blue', 0.3)
         
-        # BTN 12: CLEAR → Hold 3s: Clear patrón completo
-        elif button_id == BTN_CLEAR and duration >= LONG_HOLD_TIME:
-            self.sequencer.clear_pattern()
-            print("Patrón completo limpiado")
-            # Mostrar confirmación visual
-            for _ in range(3):
-                self.led_controller.set_led('white', True)
-                time.sleep(0.1)
-                self.led_controller.set_led('white', False)
-                time.sleep(0.1)
+        # BTN 12: CLEAR → Hold 1s: Vista EFFECTS | Hold 3s: Clear patrón
+        elif button_id == BTN_CLEAR:
+            if duration >= LONG_HOLD_TIME:
+                # Hold 3s: Clear patrón
+                self.sequencer.clear_pattern()
+                print("Patrón completo limpiado")
+                for _ in range(3):
+                    self.led_controller.set_led('white', True)
+                    time.sleep(0.1)
+                    self.led_controller.set_led('white', False)
+                    time.sleep(0.1)
+            elif duration >= HOLD_TIME:
+                # Hold 1s: Toggle vista EFFECTS
+                self.effects_view_active = not self.effects_view_active
+                if self.effects_view_active:
+                    print("🎛️ Vista EFFECTS activada - Usa Pots 0-4")
+                    self._show_effects_view()
+                else:
+                    print("Vista EFFECTS desactivada")
+                    self.view_manager.show_view(ViewType.SEQUENCER)
     
     def _on_button_release(self, button_id, duration):
         """Callback para liberación de botón"""
@@ -460,11 +474,31 @@ class DrumMachine:
         if self.sequencer.is_playing and self.sequencer.current_step % 4 == 0:
             self.led_controller.pulse_led('blue', 0.05)
     
+    # ===== EFECTOS =====
+    
+    def _show_effects_view(self):
+        """Mostrar vista de efectos con estado actual"""
+        if hasattr(self.audio_engine.processor, 'effects') and self.audio_engine.processor.effects:
+            effects_status = self.audio_engine.processor.effects.get_status()
+            self.view_manager.show_view(ViewType.EFFECTS, {'effects': effects_status}, duration=None)
+    
     # ===== LECTURA DE POTENCIÓMETROS =====
     
     def _read_potentiometers(self):
         """Leer y procesar potenciómetros con detección de cambios"""
         values = self.adc_reader.read_all_channels()
+        
+        # Modo EFFECTS: Pots controlan efectos
+        if self.effects_view_active and hasattr(self.audio_engine.processor, 'effects'):
+            effects = self.audio_engine.processor.effects
+            if effects:
+                effects.set_reverb(values[0])
+                effects.set_delay(values[1])
+                effects.set_compressor(ratio=1.0 + values[2] * 9.0)
+                effects.set_filter(values[3])
+                effects.set_saturation(values[4])
+                self._show_effects_view()
+            return  # No procesar pots normales en modo effects
         
         # POT_SCROLL (0): Seleccionar paso (0-31)
         scroll_value = values[POT_SCROLL]
