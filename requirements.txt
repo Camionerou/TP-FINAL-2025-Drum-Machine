@@ -10,3 +10,6 @@ spidev==3.6
 # Utilidades
 numpy==1.24.3
 
+# MIDI (opcional pero recomendado)
+python-rtmidi==1.5.8
+
