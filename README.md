@@ -120,14 +120,14 @@ sudo reboot
 - Salida: Jack 3.5mm integrado
 - Opcional: Altavoces Bluetooth
 
-**Ver `PINOUT.txt` para conexiones detalladas.**
+**Ver `docs/PINOUT.txt` para conexiones detalladas.**
 
 ---
 
 ## 📚 Documentación Completa
 
 **Todo en un solo lugar:**  
-👉 **`INFORME_TECNICO_PRODUCTO.md`**
+👉 **`docs/INFORME_TECNICO_PRODUCTO.md`**
 
 Incluye:
 - Especificaciones técnicas completas
@@ -205,17 +205,47 @@ sudo systemctl restart drummachine
 
 ```
 DRUMMACHINE/
-├── core/                     # Módulos principales
-├── ui/                       # Interfaz y vistas
-├── features/                 # MIDI, Bluetooth, Efectos
-├── hardware/                 # Drivers de periféricos
-├── data/                     # Samples y patrones
-├── scripts/                  # Instalación y utilidades
-├── main.py                   # Punto de entrada
+├── docs/                          # 📚 Documentación
+│   ├── INFORME_TECNICO_PRODUCTO.md
+│   ├── PLAN_REORGANIZACION.md
+│   ├── CHANGELOG_LIMPIEZA.md
+│   └── PINOUT.txt
+│
+├── core/                          # 🎯 Módulos principales
+│   ├── drum_machine.py
+│   ├── audio_engine.py
+│   ├── audio_processor.py
+│   ├── sequencer.py
+│   └── config.py
+│
+├── ui/                            # 🖥️ Interfaz de usuario
+│   ├── view_manager.py
+│   ├── button_handler.py
+│   └── splash_screen.py
+│
+├── features/                      # ✨ Características opcionales
+│   ├── tap_tempo.py
+│   ├── midi_handler.py
+│   └── bluetooth_audio.py (próximamente)
+│
+├── hardware/                      # 🔌 Drivers de hardware
+│   ├── button_matrix.py
+│   ├── led_matrix.py
+│   ├── adc_reader.py
+│   └── led_controller.py
+│
+├── data/                          # 💾 Datos del proyecto
+│   ├── samples/                   # Samples de audio WAV
+│   └── patterns/                  # Patrones guardados JSON
+│
+├── scripts/                       # 🛠️ Scripts de instalación
+│   ├── drummachine.service
+│   ├── install_service.sh
+│   └── optimize_boot.sh
+│
+├── main.py                        # 🚀 Punto de entrada
 ├── requirements.txt
-├── INFORME_TECNICO_PRODUCTO.md
-├── README.md                 # Este archivo
-└── PINOUT.txt
+└── README.md
 ```
 
 ---
@@ -252,7 +282,7 @@ bluetoothctl
 > connect [MAC]
 ```
 
-**Más soluciones en:** `INFORME_TECNICO_PRODUCTO.md` sección Troubleshooting
+**Más soluciones en:** `docs/INFORME_TECNICO_PRODUCTO.md` sección Troubleshooting
 
 ---
 
@@ -266,7 +296,7 @@ bluetoothctl
 - Grabación de sesiones
 - Efectos por instrumento
 
-Ver **`PLAN_REORGANIZACION.md`** para roadmap completo.
+Ver **`docs/PLAN_REORGANIZACION.md`** para roadmap completo.
 
 ---
 
@@ -294,4 +324,4 @@ Proyecto de código abierto educativo - IPS 6to Electro 2025
 
 **¡Disfruta tu Drum Machine!** 🥁🎶
 
-Para documentación técnica completa: **`INFORME_TECNICO_PRODUCTO.md`**
+Para documentación técnica completa: **`docs/INFORME_TECNICO_PRODUCTO.md`**

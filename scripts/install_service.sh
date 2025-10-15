@@ -23,7 +23,7 @@ fi
 
 # Copiar archivo de servicio
 echo "📋 Copiando archivo de servicio..."
-cp drummachine.service /etc/systemd/system/
+cp scripts/drummachine.service /etc/systemd/system/
 
 # Recargar systemd
 echo "🔄 Recargando systemd..."

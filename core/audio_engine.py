@@ -6,12 +6,12 @@ Maneja la carga y reproducción de samples de batería
 import pygame
 import os
 import numpy as np
-from config import (
+from .config import (
     INSTRUMENTS, SAMPLES_DIR, SAMPLE_RATE, AUDIO_BUFFER_SIZE, 
     AUDIO_CHANNELS, MASTER_VOLUME_DEFAULT, INSTRUMENT_VOLUME_DEFAULT,
     AUDIO_GAIN_BOOST
 )
-from audio_processor import AudioProcessor
+from .audio_processor import AudioProcessor
 
 
 class AudioEngine:

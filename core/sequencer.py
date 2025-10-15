@@ -7,7 +7,7 @@ import threading
 import time
 import json
 import os
-from config import (
+from .config import (
     NUM_STEPS, NUM_INSTRUMENTS, BPM_DEFAULT, BPM_MIN, BPM_MAX,
     SWING_MAX, PATTERNS_DIR, MAX_PATTERNS
 )

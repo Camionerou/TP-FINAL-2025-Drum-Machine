@@ -96,8 +96,8 @@ BTN_MUTE = 15           # Simple: Mute paso | Doble: Solo | Hold+1-8: Mute globa
 
 # ===== RUTAS =====
 
-SAMPLES_DIR = 'samples'
-PATTERNS_DIR = 'patterns'
+SAMPLES_DIR = 'data/samples'
+PATTERNS_DIR = 'data/patterns'
 MAX_PATTERNS = 8
 
 # ===== TIMING =====
