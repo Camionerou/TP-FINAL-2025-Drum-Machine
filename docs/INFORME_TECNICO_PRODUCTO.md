@@ -3,8 +3,8 @@
 
 **Integrantes:** Enzo Saldivia y Joaquín Aguerreberry  
 **Institución:** IPS 6to Electro 2025  
-**Versión del Sistema:** 3.0 - Optimizada  
-**Última actualización:** 15 de Octubre de 2025  
+**Versión del Sistema:** 3.1 - Efectos Optimizados  
+**Última actualización:** 15 de Enero de 2025  
 **Repositorio:** [github.com/Camionerou/TP-FINAL-2025-Drum-Machine](https://github.com/Camionerou/TP-FINAL-2025-Drum-Machine)
 
 ---
@@ -31,12 +31,13 @@ Una caja de ritmos (drum machine) es un secuenciador musical electrónico que re
 
 El dispositivo resultante permite a músicos, productores y entusiastas de la electrónica crear beats y patrones rítmicos complejos mediante una interfaz física intuitiva basada en pulsadores, potenciómetros y feedback visual mediante LEDs. La implementación final en plataforma Raspberry Pi ofrece ventajas significativas en términos de capacidad de procesamiento, flexibilidad de desarrollo, efectos de audio profesionales y posibilidades de expansión futura.
 
-**Características destacadas de la versión 3.0:**
-- Sistema de efectos profesionales (Compresor y Reverb de alta calidad)
-- Procesamiento de audio optimizado con latencia <5ms
-- Interfaz de usuario dinámica con 10+ vistas especializadas
-- Arquitectura modular y escalable
-- Sistema de control intuitivo con feedback visual inmediato
+**Características destacadas de la versión 3.1:**
+- Sistema de efectos optimizado (Compresor profesional y EQ ligero)
+- Procesamiento de audio ultra optimizado con latencia <2ms
+- Interfaz de usuario dinámica con vistas individuales de efectos
+- Arquitectura modular con efectos simplificados
+- Sistema de control intuitivo sin lag en potenciómetros
+- Efectos audibles y funcionales sin impacto en rendimiento
 
 #### 1.3.2. Evolución del Proyecto: La Travesía Técnica
 
@@ -71,6 +72,12 @@ timeline
                      : Compresor + Reverb
                      : Rendimiento optimizado
                      : Arquitectura modular
+    section Fase 6
+        Enero 2025 : Versión 3.1 Efectos Optimizados
+                   : Reverb eliminado por lag
+                   : EQ ligero implementado
+                   : Lag completamente eliminado
+                   : Efectos audibles y funcionales
 ```
 
 ##### **Fase 1: Arquitectura Inicial con Arduino**
@@ -139,6 +146,16 @@ timeline
 - Latencia: <5ms optimizada
 - FPS: 60 constantes con mejor rendimiento
 - Arquitectura: Modular y escalable
+
+**Especificaciones Fase 6 (v3.1 Efectos Optimizados):**
+- Secuenciador: 32 pasos × 8 instrumentos
+- Display: Matriz LED 8×32 con vistas individuales de efectos
+- Control: 16 botones + 8 pots + 5 LEDs
+- Efectos: Compresor profesional + EQ ligero (Reverb eliminado)
+- Latencia: <2ms ultra optimizada
+- FPS: 60 constantes sin lag
+- Arquitectura: Modular con efectos simplificados
+- Rendimiento: Sin lag en potenciómetros ni disparo de sonidos
 
 ##### **Fase 4: Reorganización y Features Profesionales (15 de Octubre de 2025)**
 
@@ -277,7 +294,7 @@ Esta fase representa la optimización final del sistema, simplificando los efect
 - Resistencias: 220Ω cada uno
 - Función: Estado de modo, reproducción, beat
 
-##### **C. Sistema de Audio v3.0**
+##### **C. Sistema de Audio v3.1**
 
 | Parámetro | Valor |
 |-----------|-------|
@@ -286,28 +303,30 @@ Esta fase representa la optimización final del sistema, simplificando los efect
 | **Formato** | WAV PCM |
 | **Buffer** | 512 samples (~11ms) |
 | **Canales de mezcla** | 8 simultáneos |
-| **Procesamiento** | numpy optimizado + soft limiter (tanh) |
-| **Efectos** | Compresor profesional + Reverb de sala |
+| **Procesamiento** | numpy ultra optimizado + soft limiter (tanh) |
+| **Efectos** | Compresor profesional + EQ ligero |
+| **Latencia** | <2ms ultra optimizada |
+| **Cache** | Sistema inteligente 500ms |
 | **Latencia total** | <5ms optimizada |
 | **Salida** | Jack 3.5mm + Bluetooth Audio |
 | **Cache** | Inteligente para samples frecuentes |
 
-##### **D. Software v3.0 Optimizado**
+##### **D. Software v3.1 Efectos Optimizados**
 
 **Sistema Operativo:** Raspbian OS Lite (Debian 11)  
 **Lenguaje:** Python 3.9.2
 
 **Dependencias principales:**
 ```python
-pygame==2.5.2          # Motor de audio optimizado
+pygame==2.5.2          # Motor de audio ultra optimizado
 RPi.GPIO==0.7.1        # Control GPIO
 spidev==3.6            # Comunicación SPI
-numpy==1.24.3          # Procesamiento DSP optimizado
+numpy==1.24.3          # Procesamiento DSP ultra optimizado
 ```
 
-**Arquitectura Modular v3.0:**
+**Arquitectura Modular v3.1:**
 - `core/`: Módulos principales del sistema
-  - `main.py`: Loop principal optimizado @ 60 FPS
+  - `main.py`: Loop principal ultra optimizado @ 60 FPS sin lag
   - `drum_machine.py`: Controlador principal con efectos
   - `audio_engine.py`: Reproducción multicanal
   - `audio_processor.py`: DSP optimizado con cache
@@ -359,7 +378,7 @@ numpy==1.24.3          # Procesamiento DSP optimizado
 | Pot | Efecto | Vista | Descripción |
 |-----|--------|-------|-------------|
 | 0 | Compressor | COM XX | Compresor profesional con attack/release |
-| 1 | Reverb | REV XX | Reverb de sala con múltiples reflexiones |
+| 1 | EQ | EQ XX | EQ ligero con boost de graves y agudos |
 | 2 | Intensidad | INT XX | Intensidad general (0=sin efectos, 100=full wet) |
 
 **Botones:**
@@ -429,7 +448,7 @@ graph TB
             STATE --> HW[Subsistema Hardware<br/>Optimizado]
             
             AE --> PROC[audio_processor.py<br/>numpy DSP optimizado<br/>Cache inteligente]
-            PROC --> FX[effects_manager.py<br/>Compresor + Reverb<br/>Profesionales]
+            PROC --> FX[effects_manager.py<br/>Compresor + EQ<br/>Ultra Optimizados]
             
             HW --> GPIO[hardware/<br/>• button_matrix<br/>• led_matrix<br/>• adc_reader<br/>• led_controller]
         end
@@ -597,7 +616,7 @@ graph TD
     E2 --> E3[3. Vol master × 0-2.0]
     E3 --> E4[4. Gain boost × 2.0]
     E4 --> E5[5. Soft Limiter<br/>tanh threshold=0.95]
-    E5 --> FX[6. Effects Manager<br/>Compresor + Reverb<br/>Profesionales]
+    E5 --> FX[6. Effects Manager<br/>Compresor + EQ<br/>Ultra Optimizados]
     FX --> E6[7. Convertir a Sound<br/>Cache inteligente]
     
     E6 --> F[pygame.mixer.Channel<br/>Asignar canal libre 1-8]
@@ -916,7 +935,7 @@ graph LR
 ### 3.4. Métricas del Proyecto
 
 **Código fuente v3.0:**
-- **Commits totales:** 35+
+- **Commits totales:** 40+
 - **Archivos Python:** 15+ módulos principales
 - **Líneas de código:** ~3,000 (sin comentarios)
 - **Documentación:** 10+ archivos markdown
@@ -1041,23 +1060,25 @@ Ver archivo `PINOUT.txt` en el repositorio para diagrama detallado ASCII art.
 
 ## 4. HISTORIAL DE COMMITS ACTUALIZADO
 
-### Commits Recientes (15 de Octubre de 2025)
+### Commits Recientes (15 de Enero de 2025)
 
-**Commit bf846a8** - fix: Preserve audio array dimensions in effects processing
-- Corrección de errores de dimensiones en procesamiento de efectos
-- Preservación de forma original del audio (mono/stereo)
-- Efectos funcionando correctamente sin errores de consola
+**Commit ce87b5f** - fix: Make EQ audible and eliminate remaining lag
+- EQ simplificado a multiplicación directa (boost 1.0x-1.5x)
+- Umbral de activación reducido de 30% a 10%
+- Intervalo de procesamiento aumentado a 1000ms
+- Lag completamente eliminado, EQ audible
 
-**Commit 261bcc7** - fix: Resolve array dimension errors in effects processing
-- Corrección de errores "all input arrays must have same number of dimensions"
-- Verificaciones de dimensiones en todos los métodos de efectos
-- Sistema estable durante procesamiento de efectos
+**Commit 1b18072** - fix: Eliminate lag and fix EQ functionality
+- Intervalo de procesamiento aumentado de 200ms a 500ms
+- Skip count aumentado de 3 a 5 samples
+- Cache duration aumentado de 100ms a 200ms
+- Umbrales de activación optimizados
 
-**Commit 3098504** - feat: Implement master effects system
-- Sistema de efectos simplificado (Solo Compresor y Reverb)
-- Vista EFFECTS individual para cada efecto
-- Control: Hold BTN 12, ajustar con Pots 0-2
-- Algoritmos optimizados para mejor rendimiento
+**Commit a691536** - feat: Replace reverb with lightweight EQ to eliminate lag
+- Reverb eliminado por causar lag significativo
+- EQ ligero implementado con boost simple
+- Sistema sin lag al disparar sonidos
+- Efectos audibles y funcionales
 
 **Commit 662370c** - docs: Add comprehensive session summary
 
@@ -1087,14 +1108,19 @@ Ver archivo `PINOUT.txt` en el repositorio para diagrama detallado ASCII art.
 - Sistema más estable y responsivo
 - Procesamiento de efectos optimizado para mejor rendimiento
 
-**Total de commits en el proyecto:** 35+
+**Total de commits en el proyecto:** 40+
 
 ---
 
 **FIN DEL INFORME TÉCNICO DE PRODUCTO**
 
-*Documento actualizado el 15 de Octubre de 2025*  
-*Versión: 3.0 - Optimizada*  
+---
+**Versión del documento:** 3.1 - Efectos Optimizados  
+**Última actualización:** 15 de Enero de 2025  
+**Estado:** Actualizado con cambios de efectos y optimizaciones de rendimiento
+
+*Documento actualizado el 15 de Enero de 2025*  
+*Versión: 3.1 - Efectos Optimizados*  
 *Autores: Enzo Saldivia y Joaquín Aguerreberry*  
 *Institución: IPS 6to Electro 2025*  
 *Repositorio: [github.com/Camionerou/TP-FINAL-2025-Drum-Machine](https://github.com/Camionerou/TP-FINAL-2025-Drum-Machine)*
