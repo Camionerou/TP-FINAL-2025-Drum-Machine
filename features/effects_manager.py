@@ -18,10 +18,10 @@ class EffectsManager:
         self.intensity = 0.0
         
         # Parámetros específicos (optimizados para drums)
-        self.compressor_threshold = 0.5  # Más sensible para drums
-        self.compressor_ratio = 3.0
-        self.compressor_attack = 5  # ms - más rápido para drums
-        self.compressor_release = 50  # ms - más rápido para drums
+        self.compressor_threshold = 0.3  # Mucho más sensible para drums
+        self.compressor_ratio = 4.0  # Ratio más agresivo
+        self.compressor_attack = 3  # ms - más rápido para drums
+        self.compressor_release = 30  # ms - más rápido para drums
         self.reverb_room_size = 0.5
         self.reverb_damping = 0.5
         
@@ -122,11 +122,11 @@ class EffectsManager:
         dry = audio_data.copy()
         wet = audio_data.copy()
         
-        # Aplicar efectos de forma ultra simplificada
-        if self.compressor_mix > 20:
+        # Aplicar efectos (umbrales más bajos para mejor audibilidad)
+        if self.compressor_mix > 5:  # Umbral más bajo
             wet = self._apply_compressor_fast(wet)
         
-        if self.reverb_mix > 20:
+        if self.reverb_mix > 5:  # Umbral más bajo
             wet = self._apply_reverb_fast(wet)
         
         # Mix dry/wet con intensidad general
@@ -172,30 +172,18 @@ class EffectsManager:
                 smoothed[i] = alpha * envelope[i] + (1 - alpha) * smoothed[i-1]
             envelope = smoothed
         
-        # Compresión con attack/release
-        gain_reduction = np.zeros_like(audio_flat)
-        current_gain = 1.0
+        # Compresión más agresiva y audible
+        compressed_audio = audio_flat.copy()
         
-        for i in range(len(audio_flat)):
-            if envelope[i] > threshold:
-                # Calcular reducción de ganancia necesaria
-                over_threshold = envelope[i] - threshold
-                target_gain = threshold / envelope[i] + (over_threshold / ratio) / envelope[i]
-                target_gain = max(target_gain, 0.1)  # Limitar ganancia mínima
-                
-                # Attack: reducir ganancia rápidamente
-                if target_gain < current_gain:
-                    current_gain = max(target_gain, current_gain - (1.0 / attack_samples))
-                else:
-                    current_gain = target_gain
-            else:
-                # Release: recuperar ganancia gradualmente
-                current_gain = min(1.0, current_gain + (1.0 / release_samples))
+        # Aplicar compresión simple pero efectiva
+        mask = envelope > threshold
+        if np.any(mask):
+            # Reducir picos agresivamente
+            over_threshold = envelope[mask] - threshold
+            reduction_factor = 1.0 - (over_threshold * (ratio - 1.0) / ratio)
+            reduction_factor = np.clip(reduction_factor, 0.2, 1.0)  # Limitar reducción
             
-            gain_reduction[i] = current_gain
-        
-        # Aplicar compresión
-        compressed_audio = audio_flat * gain_reduction
+            compressed_audio[mask] = audio_flat[mask] * reduction_factor
         
         # Mix con el original
         wet = self.compressor_mix / 100.0
@@ -205,7 +193,7 @@ class EffectsManager:
         return processed_flat.reshape(original_shape)
     
     def _apply_reverb_fast(self, audio):
-        """Reverb profesional con múltiples delays y feedback"""
+        """Reverb simple y muy audible"""
         # Preservar dimensiones originales
         original_shape = audio.shape
         
@@ -215,38 +203,37 @@ class EffectsManager:
         else:
             audio_flat = audio
         
-        # Múltiples delays para simular reflexiones naturales (optimizado)
-        delay_times_ms = [40, 80, 120]  # ms - menos delays para mejor rendimiento
-        feedback_gains = [0.6, 0.5, 0.4]  # Feedback más fuerte para reverb más audible
+        # Reverb simple con un delay principal
+        delay_samples = int(0.1 * self.sample_rate)  # 100ms delay
+        delay_samples = min(delay_samples, len(audio_flat) - 1)
         
-        processed_audio = audio_flat.copy()
-        
-        # Aplicar cada delay
-        for delay_ms, feedback in zip(delay_times_ms, feedback_gains):
-            delay_samples = int(delay_ms * 0.001 * self.sample_rate)
-            delay_samples = min(delay_samples, len(audio_flat) - 1)
+        if delay_samples > 0:
+            # Crear señal retardada
+            delayed = np.concatenate([
+                np.zeros(delay_samples),
+                audio_flat[:-delay_samples]
+            ])
             
-            if delay_samples > 0:
-                # Crear señal retardada
-                delayed = np.concatenate([
-                    np.zeros(delay_samples),
-                    audio_flat[:-delay_samples]
+            # Aplicar feedback fuerte
+            feedback = 0.7
+            processed_audio = audio_flat + delayed * feedback
+            
+            # Segundo delay más corto para riqueza
+            delay2_samples = int(0.05 * self.sample_rate)  # 50ms
+            delay2_samples = min(delay2_samples, len(processed_audio) - 1)
+            
+            if delay2_samples > 0:
+                delayed2 = np.concatenate([
+                    np.zeros(delay2_samples),
+                    processed_audio[:-delay2_samples]
                 ])
-                
-                # Aplicar feedback y sumar
-                processed_audio += delayed * feedback
+                processed_audio += delayed2 * 0.4
+        else:
+            processed_audio = audio_flat
         
-        # Filtro pasa-bajos para simular absorción (damping)
-        alpha = 0.7  # Factor de suavizado
-        filtered_audio = np.zeros_like(processed_audio)
-        if len(processed_audio) > 0:
-            filtered_audio[0] = processed_audio[0]
-            for i in range(1, len(processed_audio)):
-                filtered_audio[i] = alpha * processed_audio[i] + (1 - alpha) * filtered_audio[i-1]
-        
-        # Mix con el original (reverb más audible)
+        # Mix con el original (reverb muy audible)
         wet = self.reverb_mix / 100.0
-        processed_flat = audio_flat * (1.0 - wet) + filtered_audio * wet * 0.8
+        processed_flat = audio_flat * (1.0 - wet) + processed_audio * wet
         
         # Restaurar dimensiones originales
         return processed_flat.reshape(original_shape)
