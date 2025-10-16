@@ -293,7 +293,7 @@ numpy==1.24.3          # Procesamiento DSP
 | 12 | Clear paso | Clear instr. | **Vista EFFECTS (1s)** / Clear todo (3s) |
 | 13 | Save | - | +10/11: Save específico |
 | 14 | Copy | - | +10/11: Paste |
-| 15 | Mute | Solo | +0-7: Mute global |
+| 15 | Mute | Solo | **Hold 2s: Toggle Bluetooth** / +0-7: Mute global |
 
 **Instrumentos:**
 

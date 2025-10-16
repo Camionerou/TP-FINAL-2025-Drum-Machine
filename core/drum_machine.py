@@ -249,6 +249,25 @@ class DrumMachine:
                 else:
                     print("Vista EFFECTS desactivada")
                     self.view_manager.show_view(ViewType.SEQUENCER)
+        
+        # BTN 15: MUTE → Hold 2s: Toggle Bluetooth Audio
+        elif button_id == BTN_MUTE and duration >= 2.0:
+            if hasattr(self, 'bluetooth') and self.bluetooth:
+                if self.bluetooth.is_connected():
+                    print("🔌 Desconectando Bluetooth...")
+                    self.bluetooth.disconnect()
+                    self.led_controller.pulse_led('red', 0.5)
+                else:
+                    print("🔌 Conectando Bluetooth...")
+                    if self.bluetooth.quick_connect_last():
+                        print("✓ Conectado a Bluetooth")
+                        self.led_controller.pulse_led('green', 0.5)
+                    else:
+                        print("❌ No se pudo conectar a Bluetooth")
+                        self.led_controller.pulse_led('red', 0.5)
+            else:
+                print("⚠️ Bluetooth no disponible")
+                self.led_controller.pulse_led('yellow', 0.5)
     
     def _on_button_release(self, button_id, duration):
         """Callback para liberación de botón"""
