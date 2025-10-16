@@ -505,12 +505,13 @@ class LEDMatrix:
     
     def draw_effects_view(self, effects_status):
         """
-        Vista EFFECTS: Diseño ultra simple
+        Vista EFFECTS: Diseño optimizado para matriz 8x32
         
         Layout:
-        - Fila 0: "FX" + número de intensidad
-        - Fila 1-6: 5 barras verticales simples para mix
-        - Fila 7: Barra horizontal para intensidad
+        - Fila 0: "FX" + intensidad (ej: "FX 60")
+        - Fila 1: Letras R D C F S (cada letra 3x5, 4 cols total)
+        - Fila 2-6: Barras verticales debajo de cada letra
+        - Fila 7: Barra horizontal de intensidad
         
         Args:
             effects_status: Dict con mix (0-100) e intensidad (0-100)
@@ -520,14 +521,14 @@ class LEDMatrix:
         # Título "FX" + intensidad
         intensity = effects_status.get('intensity', 0)
         self._draw_text("FX", 0, 0)
-        self._draw_text(f"{int(intensity)}", 24, 0)
+        self._draw_text(f"{int(intensity)}", 8, 0)
         
-        # 5 efectos: R D C F S con barras simples
+        # 5 efectos: R D C F S
         effect_names = ['R', 'D', 'C', 'F', 'S']
         effect_keys = ['reverb', 'delay', 'compressor', 'filter', 'saturation']
         
-        # Posiciones: 2, 8, 14, 20, 26
-        positions = [2, 8, 14, 20, 26]
+        # Posiciones optimizadas: 0, 4, 8, 12, 16 (cada letra ocupa 4 cols)
+        positions = [0, 4, 8, 12, 16]
         
         for idx, (name, key, pos) in enumerate(zip(effect_names, effect_keys, positions)):
             # Mix del efecto (0-100)
@@ -536,12 +537,17 @@ class LEDMatrix:
             # Letra del efecto (fila 1)
             self._draw_text(name, pos, 1)
             
-            # Barra vertical simple (filas 2-6, altura 5)
+            # Barra vertical debajo de la letra (filas 2-6, altura 5)
             bar_height = int((mix_level / 100.0) * 5)
             
             for row in range(5):
                 pixel_on = (4 - row) < bar_height
-                self.set_pixel(row + 2, pos, pixel_on)
+                # Barra centrada debajo de la letra (3x5)
+                self.set_pixel(row + 2, pos + 1, pixel_on)  # Centro de la letra
+            
+            # Indicador de nivel en la esquina de cada letra
+            if mix_level > 0:
+                self.set_pixel(1, pos + 3, True)  # Punto en esquina
         
         # Barra de intensidad general (fila 7, cols 0-31)
         intensity_width = int((intensity / 100.0) * 32)
