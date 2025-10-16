@@ -79,9 +79,9 @@ class EffectsManager:
         dry = audio_data.copy()
         wet = audio_data.copy()
         
-        # Aplicar efectos de forma optimizada (máximo 2 efectos simultáneos)
+        # Aplicar efectos de forma optimizada (máximo 3 efectos simultáneos)
         effects_applied = 0
-        max_effects = 2  # Limitar para evitar lag
+        max_effects = 3  # Aumentar a 3 para incluir más efectos
         
         # Priorizar efectos más importantes
         if self.reverb_mix > 10 and effects_applied < max_effects:
@@ -90,6 +90,18 @@ class EffectsManager:
         
         if self.delay_mix > 10 and effects_applied < max_effects:
             wet = self._apply_delay_simple(wet)
+            effects_applied += 1
+        
+        if self.compressor_mix > 10 and effects_applied < max_effects:
+            wet = self._apply_compressor_simple(wet)
+            effects_applied += 1
+        
+        if self.filter_mix > 10 and effects_applied < max_effects:
+            wet = self._apply_filter_simple(wet)
+            effects_applied += 1
+        
+        if self.saturation_mix > 10 and effects_applied < max_effects:
+            wet = self._apply_saturation_simple(wet)
             effects_applied += 1
         
         # Mix dry/wet con intensidad general
@@ -128,6 +140,56 @@ class EffectsManager:
             return audio * (1.0 - wet) + delayed * wet * feedback
         
         return audio
+    
+    def _apply_compressor_simple(self, audio):
+        """Compresor simplificado para evitar lag"""
+        # Compresión simple: reducir picos altos
+        threshold = 0.7
+        ratio = 2.0
+        
+        # Aplicar compresión solo a picos altos
+        compressed = audio.copy()
+        mask = np.abs(audio) > threshold
+        
+        if np.any(mask):
+            # Reducir picos por el ratio
+            compressed[mask] = np.sign(audio[mask]) * (
+                threshold + (np.abs(audio[mask]) - threshold) / ratio
+            )
+        
+        # Mix con el original
+        wet = self.compressor_mix / 100.0
+        return audio * (1.0 - wet) + compressed * wet
+    
+    def _apply_filter_simple(self, audio):
+        """Filtro simplificado para evitar lag"""
+        # Filtro low-pass simple de un polo
+        cutoff_hz = 200 + (self.filter_cutoff * 7800)  # 200Hz - 8kHz
+        alpha = min(2.0 * np.pi * cutoff_hz / self.sample_rate, 1.0)
+        
+        # Aplicar filtro simple
+        filtered = np.zeros_like(audio)
+        filtered[0] = audio[0]
+        
+        for i in range(1, len(audio)):
+            filtered[i] = alpha * audio[i] + (1 - alpha) * filtered[i-1]
+        
+        # Mix con el original
+        wet = self.filter_mix / 100.0
+        return audio * (1.0 - wet) + filtered * wet
+    
+    def _apply_saturation_simple(self, audio):
+        """Saturación simplificada para evitar lag"""
+        # Saturación simple usando tanh
+        drive = 1.0 + (self.saturation_drive * 2.0)  # 1.0 a 3.0
+        driven = audio * drive
+        
+        # Aplicar saturación
+        saturated = np.tanh(driven) / np.tanh(drive)
+        
+        # Mix con el original
+        wet = self.saturation_mix / 100.0
+        return audio * (1.0 - wet) + saturated * wet
     
     def _apply_compressor(self, audio):
         """Compresor dinámico simple"""
