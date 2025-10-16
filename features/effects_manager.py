@@ -75,9 +75,8 @@ class EffectsManager:
         if total_mix < 0.1:  # Menos del 10% de mix total
             return audio_data
         
-        # Asegurar que el audio sea 1D
-        if audio_data.ndim > 1:
-            audio_data = audio_data.flatten()
+        # Preservar dimensiones originales del audio
+        original_shape = audio_data.shape
         
         # Audio original (dry) y procesado (wet)
         dry = audio_data.copy()
@@ -115,105 +114,145 @@ class EffectsManager:
     
     def _apply_reverb_simple(self, audio):
         """Reverb simplificado para evitar lag"""
-        # Asegurar que sea 1D
+        # Preservar dimensiones originales
+        original_shape = audio.shape
+        
+        # Trabajar con audio plano para procesamiento
         if audio.ndim > 1:
-            audio = audio.flatten()
+            audio_flat = audio.flatten()
+        else:
+            audio_flat = audio
         
         # Reverb muy simple: solo un delay corto con feedback bajo
         delay_samples = int(0.03 * self.sample_rate)  # 30ms
-        delay_samples = min(delay_samples, len(audio) - 1)
+        delay_samples = min(delay_samples, len(audio_flat) - 1)
         
         if delay_samples > 0:
             # Aplicar delay simple
-            delayed = np.concatenate([np.zeros(delay_samples), audio[:-delay_samples]])
+            delayed = np.concatenate([np.zeros(delay_samples), audio_flat[:-delay_samples]])
             # Mix con feedback bajo
             feedback = 0.3
             wet = self.reverb_mix / 100.0
-            return audio * (1.0 - wet) + delayed * wet * feedback
+            processed_flat = audio_flat * (1.0 - wet) + delayed * wet * feedback
+        else:
+            processed_flat = audio_flat
         
-        return audio
+        # Restaurar dimensiones originales
+        return processed_flat.reshape(original_shape)
     
     def _apply_delay_simple(self, audio):
         """Delay simplificado para evitar lag"""
-        # Asegurar que sea 1D
+        # Preservar dimensiones originales
+        original_shape = audio.shape
+        
+        # Trabajar con audio plano para procesamiento
         if audio.ndim > 1:
-            audio = audio.flatten()
+            audio_flat = audio.flatten()
+        else:
+            audio_flat = audio
         
         # Delay simple sin buffer circular
         delay_samples = int(self.delay_time * 0.3 * self.sample_rate)  # Max 300ms
-        delay_samples = min(delay_samples, len(audio) - 1)
+        delay_samples = min(delay_samples, len(audio_flat) - 1)
         
         if delay_samples > 0:
             # Aplicar delay simple
-            delayed = np.concatenate([np.zeros(delay_samples), audio[:-delay_samples]])
+            delayed = np.concatenate([np.zeros(delay_samples), audio_flat[:-delay_samples]])
             # Mix con feedback bajo
             feedback = 0.2
             wet = self.delay_mix / 100.0
-            return audio * (1.0 - wet) + delayed * wet * feedback
+            processed_flat = audio_flat * (1.0 - wet) + delayed * wet * feedback
+        else:
+            processed_flat = audio_flat
         
-        return audio
+        # Restaurar dimensiones originales
+        return processed_flat.reshape(original_shape)
     
     def _apply_compressor_simple(self, audio):
         """Compresor simplificado para evitar lag"""
-        # Asegurar que sea 1D
+        # Preservar dimensiones originales
+        original_shape = audio.shape
+        
+        # Trabajar con audio plano para procesamiento
         if audio.ndim > 1:
-            audio = audio.flatten()
+            audio_flat = audio.flatten()
+        else:
+            audio_flat = audio
         
         # Compresión simple: reducir picos altos
         threshold = 0.7
         ratio = 2.0
         
         # Aplicar compresión solo a picos altos
-        compressed = audio.copy()
-        mask = np.abs(audio) > threshold
+        compressed = audio_flat.copy()
+        mask = np.abs(audio_flat) > threshold
         
         if np.any(mask):
             # Reducir picos por el ratio
-            compressed[mask] = np.sign(audio[mask]) * (
-                threshold + (np.abs(audio[mask]) - threshold) / ratio
+            compressed[mask] = np.sign(audio_flat[mask]) * (
+                threshold + (np.abs(audio_flat[mask]) - threshold) / ratio
             )
         
         # Mix con el original
         wet = self.compressor_mix / 100.0
-        return audio * (1.0 - wet) + compressed * wet
+        processed_flat = audio_flat * (1.0 - wet) + compressed * wet
+        
+        # Restaurar dimensiones originales
+        return processed_flat.reshape(original_shape)
     
     def _apply_filter_simple(self, audio):
         """Filtro simplificado para evitar lag"""
-        # Asegurar que sea 1D
+        # Preservar dimensiones originales
+        original_shape = audio.shape
+        
+        # Trabajar con audio plano para procesamiento
         if audio.ndim > 1:
-            audio = audio.flatten()
+            audio_flat = audio.flatten()
+        else:
+            audio_flat = audio
         
         # Filtro low-pass simple de un polo
         cutoff_hz = 200 + (self.filter_cutoff * 7800)  # 200Hz - 8kHz
         alpha = min(2.0 * np.pi * cutoff_hz / self.sample_rate, 1.0)
         
         # Aplicar filtro simple
-        filtered = np.zeros_like(audio)
-        filtered[0] = audio[0]
+        filtered = np.zeros_like(audio_flat)
+        filtered[0] = audio_flat[0]
         
-        for i in range(1, len(audio)):
-            filtered[i] = alpha * audio[i] + (1 - alpha) * filtered[i-1]
+        for i in range(1, len(audio_flat)):
+            filtered[i] = alpha * audio_flat[i] + (1 - alpha) * filtered[i-1]
         
         # Mix con el original
         wet = self.filter_mix / 100.0
-        return audio * (1.0 - wet) + filtered * wet
+        processed_flat = audio_flat * (1.0 - wet) + filtered * wet
+        
+        # Restaurar dimensiones originales
+        return processed_flat.reshape(original_shape)
     
     def _apply_saturation_simple(self, audio):
         """Saturación simplificada para evitar lag"""
-        # Asegurar que sea 1D
+        # Preservar dimensiones originales
+        original_shape = audio.shape
+        
+        # Trabajar con audio plano para procesamiento
         if audio.ndim > 1:
-            audio = audio.flatten()
+            audio_flat = audio.flatten()
+        else:
+            audio_flat = audio
         
         # Saturación simple usando tanh
         drive = 1.0 + (self.saturation_drive * 2.0)  # 1.0 a 3.0
-        driven = audio * drive
+        driven = audio_flat * drive
         
         # Aplicar saturación
         saturated = np.tanh(driven) / np.tanh(drive)
         
         # Mix con el original
         wet = self.saturation_mix / 100.0
-        return audio * (1.0 - wet) + saturated * wet
+        processed_flat = audio_flat * (1.0 - wet) + saturated * wet
+        
+        # Restaurar dimensiones originales
+        return processed_flat.reshape(original_shape)
     
     def _apply_compressor(self, audio):
         """Compresor dinámico simple"""
