@@ -505,26 +505,28 @@ class LEDMatrix:
     
     def draw_effects_view(self, effects_status):
         """
-        Vista EFFECTS: Diseño mejorado con mix e intensidad
+        Vista EFFECTS: Diseño ultra simple
         
         Layout:
-        - Fila 0: "EFFECTS" texto centrado
-        - Fila 2-7: 5 barras verticales para mix de cada efecto
-        - Fila 7: Barra horizontal para intensidad general
+        - Fila 0: "FX" + número de intensidad
+        - Fila 1-6: 5 barras verticales simples para mix
+        - Fila 7: Barra horizontal para intensidad
         
         Args:
             effects_status: Dict con mix (0-100) e intensidad (0-100)
         """
         self.clear()
         
-        # Título centrado
-        self._draw_text("EFFECTS", 13, 0)
+        # Título "FX" + intensidad
+        intensity = effects_status.get('intensity', 0)
+        self._draw_text("FX", 0, 0)
+        self._draw_text(f"{int(intensity)}", 24, 0)
         
-        # 5 efectos: R D C F S
+        # 5 efectos: R D C F S con barras simples
         effect_names = ['R', 'D', 'C', 'F', 'S']
         effect_keys = ['reverb', 'delay', 'compressor', 'filter', 'saturation']
         
-        # Posiciones: 2, 8, 14, 20, 26 (6 cols de separación)
+        # Posiciones: 2, 8, 14, 20, 26
         positions = [2, 8, 14, 20, 26]
         
         for idx, (name, key, pos) in enumerate(zip(effect_names, effect_keys, positions)):
@@ -532,18 +534,16 @@ class LEDMatrix:
             mix_level = effects_status.get(f'{key}_mix', 0)
             
             # Letra del efecto (fila 1)
-            self._draw_text(name, pos + 1, 1)
+            self._draw_text(name, pos, 1)
             
-            # Barra vertical de mix (filas 2-7, altura 6)
-            bar_height = int((mix_level / 100.0) * 6)
+            # Barra vertical simple (filas 2-6, altura 5)
+            bar_height = int((mix_level / 100.0) * 5)
             
-            for row in range(6):
-                pixel_on = (5 - row) < bar_height
+            for row in range(5):
+                pixel_on = (4 - row) < bar_height
                 self.set_pixel(row + 2, pos, pixel_on)
-                self.set_pixel(row + 2, pos + 1, pixel_on)
         
         # Barra de intensidad general (fila 7, cols 0-31)
-        intensity = effects_status.get('intensity', 0)
         intensity_width = int((intensity / 100.0) * 32)
         
         for col in range(intensity_width):
