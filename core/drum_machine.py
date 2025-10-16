@@ -521,10 +521,11 @@ class DrumMachine:
             if effects:
                 # Detectar qué pot cambió más significativamente
                 if not hasattr(self, '_last_effects_values'):
-                    self._last_effects_values = values.copy()
+                    self._last_effects_values = np.array(values).copy()
                 
-                # Calcular cambios
-                changes = np.abs(values - self._last_effects_values)
+                # Calcular cambios (asegurar que ambos sean arrays de numpy)
+                values_array = np.array(values)
+                changes = np.abs(values_array - self._last_effects_values)
                 max_change_idx = np.argmax(changes)
                 
                 # Solo mostrar vista si hay cambio significativo (>5%)
@@ -573,7 +574,7 @@ class DrumMachine:
                         )
                 
                 # Actualizar valores de referencia
-                self._last_effects_values = values.copy()
+                self._last_effects_values = values_array.copy()
             return  # No procesar pots normales en modo effects
         
         # POT_SCROLL (0): Seleccionar paso (0-31)
