@@ -20,9 +20,9 @@ class ViewType(Enum):
     PATTERN = "pattern"
     SAVE = "save"
     EFFECTS = "effects"
-    # Vistas individuales de efectos (solo compresor y reverb)
+    # Vistas individuales de efectos (solo compresor y EQ)
     EFFECT_COMPRESSOR = "effect_compressor"
-    EFFECT_REVERB = "effect_reverb"
+    EFFECT_EQ = "effect_eq"
     EFFECT_INTENSITY = "effect_intensity"
 
 
@@ -200,14 +200,14 @@ class ViewManager:
             effects_status = self.view_data.get('effects', {})
             led_matrix.draw_effects_view(effects_status)
         
-        # Vistas individuales de efectos (solo compresor y reverb)
+        # Vistas individuales de efectos (solo compresor y EQ)
         elif self.current_view == ViewType.EFFECT_COMPRESSOR:
             compressor_mix = self.view_data.get('compressor_mix', 0)
             led_matrix.draw_effect_view("COM", compressor_mix)
         
-        elif self.current_view == ViewType.EFFECT_REVERB:
-            reverb_mix = self.view_data.get('reverb_mix', 0)
-            led_matrix.draw_effect_view("REV", reverb_mix)
+        elif self.current_view == ViewType.EFFECT_EQ:
+            eq_mix = self.view_data.get('eq_mix', 0)
+            led_matrix.draw_effect_view("EQ", eq_mix)
         
         elif self.current_view == ViewType.EFFECT_INTENSITY:
             intensity = self.view_data.get('intensity', 0)

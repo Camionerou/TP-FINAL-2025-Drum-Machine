@@ -7,14 +7,14 @@ import numpy as np
 
 
 class EffectsManager:
-    """Gestor de efectos de audio ultra optimizado - Solo Compresor y Reverb"""
+    """Gestor de efectos de audio ultra optimizado - Solo Compresor y EQ"""
     
     def __init__(self, sample_rate=44100):
         self.sample_rate = sample_rate
         
         # Solo dos efectos principales
         self.compressor_mix = 0.0
-        self.reverb_mix = 0.0
+        self.eq_mix = 0.0  # Reemplaza reverb por EQ
         self.intensity = 0.0
         
         # Parámetros específicos (optimizados para drums)
@@ -55,9 +55,9 @@ class EffectsManager:
         self.compressor_mix = max(0, min(100, mix))
         self._invalidate_cache()
     
-    def set_reverb_mix(self, mix):
-        """Establecer mix del reverb (0-100)"""
-        self.reverb_mix = max(0, min(100, mix))
+    def set_eq_mix(self, mix):
+        """Establecer mix del EQ (0-100)"""
+        self.eq_mix = max(0, min(100, mix))
         self._invalidate_cache()
     
     def set_intensity(self, intensity):
@@ -110,7 +110,7 @@ class EffectsManager:
             return audio_data  # Retornar audio sin procesar si está en cache
         
         # Solo procesar si hay efectos activos significativos
-        total_mix = (self.compressor_mix + self.reverb_mix) / 100.0
+        total_mix = (self.compressor_mix + self.eq_mix) / 100.0
         
         if total_mix < 0.2:  # Threshold más alto
             return audio_data
@@ -126,8 +126,8 @@ class EffectsManager:
         if self.compressor_mix > 5:  # Umbral más bajo
             wet = self._apply_compressor_fast(wet)
         
-        if self.reverb_mix > 5:  # Umbral más bajo
-            wet = self._apply_reverb_fast(wet)
+        if self.eq_mix > 5:  # Umbral más bajo
+            wet = self._apply_eq_fast(wet)
         
         # Mix dry/wet con intensidad general
         intensity_factor = self.intensity / 100.0
@@ -192,8 +192,8 @@ class EffectsManager:
         # Restaurar dimensiones originales
         return processed_flat.reshape(original_shape)
     
-    def _apply_reverb_fast(self, audio):
-        """Reverb simple y muy audible"""
+    def _apply_eq_fast(self, audio):
+        """EQ simple y ultra rápido para drums"""
         # Preservar dimensiones originales
         original_shape = audio.shape
         
@@ -203,36 +203,29 @@ class EffectsManager:
         else:
             audio_flat = audio
         
-        # Reverb simple con un delay principal
-        delay_samples = int(0.1 * self.sample_rate)  # 100ms delay
-        delay_samples = min(delay_samples, len(audio_flat) - 1)
+        # EQ simple: boost de graves y agudos para drums
+        # Filtro pasa-bajos para graves (boost)
+        alpha_low = 0.3  # Factor de suavizado para graves
+        low_filtered = np.zeros_like(audio_flat)
+        if len(audio_flat) > 0:
+            low_filtered[0] = audio_flat[0]
+            for i in range(1, len(audio_flat)):
+                low_filtered[i] = alpha_low * audio_flat[i] + (1 - alpha_low) * low_filtered[i-1]
         
-        if delay_samples > 0:
-            # Crear señal retardada
-            delayed = np.concatenate([
-                np.zeros(delay_samples),
-                audio_flat[:-delay_samples]
-            ])
-            
-            # Aplicar feedback fuerte
-            feedback = 0.7
-            processed_audio = audio_flat + delayed * feedback
-            
-            # Segundo delay más corto para riqueza
-            delay2_samples = int(0.05 * self.sample_rate)  # 50ms
-            delay2_samples = min(delay2_samples, len(processed_audio) - 1)
-            
-            if delay2_samples > 0:
-                delayed2 = np.concatenate([
-                    np.zeros(delay2_samples),
-                    processed_audio[:-delay2_samples]
-                ])
-                processed_audio += delayed2 * 0.4
-        else:
-            processed_audio = audio_flat
+        # Filtro pasa-altos para agudos (boost)
+        alpha_high = 0.7  # Factor de suavizado para agudos
+        high_filtered = np.zeros_like(audio_flat)
+        if len(audio_flat) > 0:
+            high_filtered[0] = audio_flat[0]
+            for i in range(1, len(audio_flat)):
+                high_filtered[i] = alpha_high * audio_flat[i] + (1 - alpha_high) * high_filtered[i-1]
         
-        # Mix con el original (reverb muy audible)
-        wet = self.reverb_mix / 100.0
+        # Combinar EQ
+        eq_boost = 0.3  # Boost de EQ
+        processed_audio = audio_flat + (low_filtered + high_filtered) * eq_boost
+        
+        # Mix con el original
+        wet = self.eq_mix / 100.0
         processed_flat = audio_flat * (1.0 - wet) + processed_audio * wet
         
         # Restaurar dimensiones originales
@@ -241,10 +234,8 @@ class EffectsManager:
     def reset_all(self):
         """Resetear todos los efectos"""
         self.compressor_mix = 0.0
-        self.reverb_mix = 0.0
+        self.eq_mix = 0.0
         self.intensity = 0.0
-        self.reverb_buffer.fill(0)
-        self.reverb_pos = 0
         self._invalidate_cache()
     
     def disable_processing(self):
