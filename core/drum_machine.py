@@ -25,7 +25,7 @@ from features import TapTempo, MIDIHandler, BluetoothAudio
 
 
 class DrumMachine:
-    """Drum Machine principal con sistema de vistas dinámicas"""
+    """Drum Machine principal optimizado con sistema de vistas dinámicas"""
     
     def __init__(self):
         """Inicializar drum machine"""
@@ -533,43 +533,22 @@ class DrumMachine:
                 if changes[max_change_idx] > 0.02 or first_time:
                     self._effects_view_shown = True
                     
-                    if max_change_idx == 0:  # Pot 0: Reverb
-                        reverb_mix = values[0] * 100
-                        effects.set_reverb_mix(reverb_mix)
-                        self.view_manager.show_view(
-                            ViewType.EFFECT_REVERB,
-                            {'reverb_mix': reverb_mix}
-                        )
-                    elif max_change_idx == 1:  # Pot 1: Delay
-                        delay_mix = values[1] * 100
-                        effects.set_delay_mix(delay_mix)
-                        self.view_manager.show_view(
-                            ViewType.EFFECT_DELAY,
-                            {'delay_mix': delay_mix}
-                        )
-                    elif max_change_idx == 2:  # Pot 2: Compressor
-                        compressor_mix = values[2] * 100
+                    if max_change_idx == 0:  # Pot 0: Compresor
+                        compressor_mix = values[0] * 100
                         effects.set_compressor_mix(compressor_mix)
                         self.view_manager.show_view(
                             ViewType.EFFECT_COMPRESSOR,
                             {'compressor_mix': compressor_mix}
                         )
-                    elif max_change_idx == 3:  # Pot 3: Filter
-                        filter_mix = values[3] * 100
-                        effects.set_filter_mix(filter_mix)
+                    elif max_change_idx == 1:  # Pot 1: Reverb
+                        reverb_mix = values[1] * 100
+                        effects.set_reverb_mix(reverb_mix)
                         self.view_manager.show_view(
-                            ViewType.EFFECT_FILTER,
-                            {'filter_mix': filter_mix}
+                            ViewType.EFFECT_REVERB,
+                            {'reverb_mix': reverb_mix}
                         )
-                    elif max_change_idx == 4:  # Pot 4: Saturation
-                        saturation_mix = values[4] * 100
-                        effects.set_saturation_mix(saturation_mix)
-                        self.view_manager.show_view(
-                            ViewType.EFFECT_SATURATION,
-                            {'saturation_mix': saturation_mix}
-                        )
-                    elif max_change_idx == 5:  # Pot 5: Intensidad
-                        intensity = values[5] * 100
+                    elif max_change_idx == 2:  # Pot 2: Intensidad
+                        intensity = values[2] * 100
                         effects.set_intensity(intensity)
                         self.view_manager.show_view(
                             ViewType.EFFECT_INTENSITY,
@@ -709,9 +688,9 @@ class DrumMachine:
                 # Actualizar manejador de botones
                 self.button_handler.update(pressed_buttons)
                 
-                # Leer potenciómetros (cada 3 frames para reducir carga)
+                # Leer potenciómetros (cada 2 frames para mejor responsividad)
                 pot_update_counter += 1
-                if pot_update_counter >= 3:
+                if pot_update_counter >= 2:
                     self._read_potentiometers()
                     pot_update_counter = 0
                 

@@ -20,12 +20,9 @@ class ViewType(Enum):
     PATTERN = "pattern"
     SAVE = "save"
     EFFECTS = "effects"
-    # Vistas individuales de efectos
-    EFFECT_REVERB = "effect_reverb"
-    EFFECT_DELAY = "effect_delay"
+    # Vistas individuales de efectos (solo compresor y reverb)
     EFFECT_COMPRESSOR = "effect_compressor"
-    EFFECT_FILTER = "effect_filter"
-    EFFECT_SATURATION = "effect_saturation"
+    EFFECT_REVERB = "effect_reverb"
     EFFECT_INTENSITY = "effect_intensity"
 
 
@@ -203,26 +200,14 @@ class ViewManager:
             effects_status = self.view_data.get('effects', {})
             led_matrix.draw_effects_view(effects_status)
         
-        # Vistas individuales de efectos
-        elif self.current_view == ViewType.EFFECT_REVERB:
-            reverb_mix = self.view_data.get('reverb_mix', 0)
-            led_matrix.draw_effect_view("REV", reverb_mix)
-        
-        elif self.current_view == ViewType.EFFECT_DELAY:
-            delay_mix = self.view_data.get('delay_mix', 0)
-            led_matrix.draw_effect_view("DEL", delay_mix)
-        
+        # Vistas individuales de efectos (solo compresor y reverb)
         elif self.current_view == ViewType.EFFECT_COMPRESSOR:
             compressor_mix = self.view_data.get('compressor_mix', 0)
             led_matrix.draw_effect_view("COM", compressor_mix)
         
-        elif self.current_view == ViewType.EFFECT_FILTER:
-            filter_mix = self.view_data.get('filter_mix', 0)
-            led_matrix.draw_effect_view("FIL", filter_mix)
-        
-        elif self.current_view == ViewType.EFFECT_SATURATION:
-            saturation_mix = self.view_data.get('saturation_mix', 0)
-            led_matrix.draw_effect_view("SAT", saturation_mix)
+        elif self.current_view == ViewType.EFFECT_REVERB:
+            reverb_mix = self.view_data.get('reverb_mix', 0)
+            led_matrix.draw_effect_view("REV", reverb_mix)
         
         elif self.current_view == ViewType.EFFECT_INTENSITY:
             intensity = self.view_data.get('intensity', 0)

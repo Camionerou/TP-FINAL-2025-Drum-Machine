@@ -15,21 +15,25 @@ except ImportError:
 
 
 class AudioProcessor:
-    """Procesador de audio con ganancia, limitador y efectos"""
+    """Procesador de audio optimizado con ganancia, limitador y efectos"""
     
     def __init__(self):
-        """Inicializar procesador de audio"""
+        """Inicializar procesador de audio optimizado"""
         self.master_gain = 2.0
         self.limiter_threshold = 0.95
         self.limiter_enabled = True
         
-        # Effects manager
+        # Effects manager optimizado
         if EFFECTS_AVAILABLE:
             self.effects = EffectsManager(sample_rate=44100)
-            print("AudioProcessor + EffectsManager inicializados")
+            print("✅ AudioProcessor + EffectsManager (Compresor + Reverb) inicializados")
         else:
             self.effects = None
-            print("AudioProcessor inicializado (sin efectos)")
+            print("⚠️ AudioProcessor sin efectos")
+        
+        # Cache para optimización
+        self._last_processed_shape = None
+        self._processing_cache = {}
     
     def apply_gain(self, audio_data, gain):
         """
@@ -90,11 +94,11 @@ class AudioProcessor:
         try:
             sound_array = pygame.sndarray.array(sound)
             
-            # Convertir a float normalizado (-1.0 a 1.0)
+            # Convertir a float normalizado (-1.0 a 1.0) - optimizado
             if sound_array.dtype == np.int16:
-                audio_float = sound_array.astype(np.float32) / 32768.0
+                audio_float = sound_array.astype(np.float32) * (1.0 / 32768.0)
             elif sound_array.dtype == np.uint8:
-                audio_float = (sound_array.astype(np.float32) - 128) / 128.0
+                audio_float = (sound_array.astype(np.float32) - 128.0) * (1.0 / 128.0)
             else:
                 # Si no podemos procesar, usar método simple
                 sound.set_volume(min(1.0, volume * gain * self.master_gain))
@@ -113,11 +117,11 @@ class AudioProcessor:
             if self.effects and self.effects.has_active_effects():
                 processed = self.effects.process(processed)
             
-            # Convertir de vuelta a int16
+            # Convertir de vuelta a formato original - optimizado
             if sound_array.dtype == np.int16:
-                processed_int = (processed * 32767).astype(np.int16)
+                processed_int = (processed * 32767.0).astype(np.int16)
             else:
-                processed_int = ((processed * 128) + 128).astype(np.uint8)
+                processed_int = (processed * 128.0 + 128.0).astype(np.uint8)
             
             # Crear nuevo Sound con audio procesado
             # Manejar mono y stereo

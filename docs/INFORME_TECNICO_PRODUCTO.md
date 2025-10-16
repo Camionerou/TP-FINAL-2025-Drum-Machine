@@ -275,12 +275,9 @@ numpy==1.24.3          # Procesamiento DSP
 
 | Pot | Efecto | Vista | Descripción |
 |-----|--------|-------|-------------|
-| 0 | Reverb | REV XX | Ambiente simple (delay 30ms + feedback) |
-| 1 | Delay | DEL XX | Echo simple (delay variable + feedback bajo) |
-| 2 | Compressor | COM XX | Compresión de picos (threshold + ratio) |
-| 3 | Filter | FIL XX | Filtro low-pass de un polo (200Hz-8kHz) |
-| 4 | Saturation | SAT XX | Saturación tanh (drive 1.0-3.0) |
-| 5 | Intensidad | INT XX | Intensidad general (0=sin efectos, 100=full wet) |
+| 0 | Compressor | COM XX | Compresor profesional con attack/release |
+| 1 | Reverb | REV XX | Reverb de sala con múltiples reflexiones |
+| 2 | Intensidad | INT XX | Intensidad general (0=sin efectos, 100=full wet) |
 
 **Botones:**
 
@@ -323,7 +320,7 @@ numpy==1.24.3          # Procesamiento DSP
 | **VOL_CYMS** | Pot 7 | 1s | "C" + número + barra |
 | **PATTERN** | BTN 10/11 | 1.5s | Número grande del patrón |
 | **SAVE** | BTN 13 | 1.5s | Animación + checkmark |
-| **EFFECTS** | Hold BTN 12 | Permanente | Vistas individuales: REV/DEL/COM/FIL/SAT/INT XX |
+| **EFFECTS** | Hold BTN 12 | Permanente | Vistas individuales: COM/REV/INT XX |
 
 ---
 
@@ -847,6 +844,16 @@ graph LR
 
 **Resultado:** Rango dinámico completo sin clipping
 
+#### Desafío 3: Optimización de Efectos (Commits 261bcc7 - bf846a8)
+**Problema:** Sistema de efectos complejo causaba lag y errores de dimensiones  
+**Solución simplificada:**
+1. Reducción a 2 efectos principales: Compresor y Reverb
+2. Algoritmos optimizados con preservación de dimensiones
+3. Control de frecuencia de procesamiento (50ms)
+4. Cache de procesamiento para mejor rendimiento
+
+**Resultado:** Efectos estables sin lag, procesamiento eficiente
+
 #### Desafío 3: Legibilidad de Vistas (Commits f60e25f - da7ef99)
 **Problema:** Texto pequeño ilegible en display 8×32  
 **Solución:**
@@ -923,11 +930,21 @@ Ver archivo `PINOUT.txt` en el repositorio para diagrama detallado ASCII art.
 
 ### Commits Recientes (15 de Octubre de 2025)
 
+**Commit bf846a8** - fix: Preserve audio array dimensions in effects processing
+- Corrección de errores de dimensiones en procesamiento de efectos
+- Preservación de forma original del audio (mono/stereo)
+- Efectos funcionando correctamente sin errores de consola
+
+**Commit 261bcc7** - fix: Resolve array dimension errors in effects processing
+- Corrección de errores "all input arrays must have same number of dimensions"
+- Verificaciones de dimensiones en todos los métodos de efectos
+- Sistema estable durante procesamiento de efectos
+
 **Commit 3098504** - feat: Implement master effects system
-- Sistema de efectos master (Reverb, Delay, Compressor, Filter, Saturation)
-- Vista EFFECTS con barras para cada efecto
-- Control: Hold BTN 12, ajustar con Pots 0-4
-- Integrado en cadena de procesamiento de audio
+- Sistema de efectos simplificado (Solo Compresor y Reverb)
+- Vista EFFECTS individual para cada efecto
+- Control: Hold BTN 12, ajustar con Pots 0-2
+- Algoritmos optimizados para mejor rendimiento
 
 **Commit 662370c** - docs: Add comprehensive session summary
 

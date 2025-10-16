@@ -1,48 +1,59 @@
 """
-Effects Manager - Sistema de efectos de audio master
-Reverb, Delay, Compressor, Filter, Distortion
+Effects Manager - Sistema de efectos simplificado
+Solo Compresor y Reverb de alta calidad
 """
 
 import numpy as np
 
 
 class EffectsManager:
-    """Gestor de efectos de audio para salida master"""
+    """Gestor de efectos de audio simplificado - Solo Compresor y Reverb"""
     
     def __init__(self, sample_rate=44100):
         self.sample_rate = sample_rate
         
-        # Mix de cada efecto (0-100%)
-        self.reverb_mix = 0.0
-        self.delay_mix = 0.0
+        # Solo dos efectos principales
         self.compressor_mix = 0.0
-        self.filter_mix = 0.0
-        self.saturation_mix = 0.0
-        
-        # Intensidad general (0-100%)
+        self.reverb_mix = 0.0
         self.intensity = 0.0
         
-        # Parámetros internos de efectos
-        self.delay_time = 0.3          # 300ms fijo
-        self.delay_feedback = 0.3
+        # Parámetros específicos
         self.compressor_threshold = 0.7
-        self.compressor_ratio = 2.0
-        self.filter_cutoff = 0.7       # 7kHz fijo
-        self.filter_type = 'lowpass'
-        self.saturation_drive = 0.5    # Drive fijo
+        self.compressor_ratio = 3.0
+        self.reverb_room_size = 0.5
+        self.reverb_damping = 0.5
         
-        # Buffer para delay
-        self.delay_buffer_size = int(0.5 * sample_rate)  # 500ms max
-        self.delay_buffer = np.zeros(self.delay_buffer_size)
-        self.delay_write_pos = 0
-        
-        # Control de frecuencia de procesamiento para evitar lag
+        # Control de frecuencia de procesamiento
         self.last_process_time = 0
-        self.process_interval = 0.1  # Procesar máximo cada 100ms
+        self.process_interval = 0.05  # 50ms para mejor responsividad
+        
+        # Buffers para reverb
+        self.reverb_buffer = np.zeros(int(0.5 * sample_rate))  # 500ms buffer
+        self.reverb_pos = 0
+    
+    def has_active_effects(self):
+        """Verificar si hay efectos activos"""
+        return self.intensity > 5 or self.compressor_mix > 5 or self.reverb_mix > 5
+    
+    def get_intensity(self):
+        """Obtener intensidad actual"""
+        return self.intensity
+    
+    def set_compressor_mix(self, mix):
+        """Establecer mix del compresor (0-100)"""
+        self.compressor_mix = max(0, min(100, mix))
+    
+    def set_reverb_mix(self, mix):
+        """Establecer mix del reverb (0-100)"""
+        self.reverb_mix = max(0, min(100, mix))
+    
+    def set_intensity(self, intensity):
+        """Establecer intensidad general (0-100)"""
+        self.intensity = max(0, min(100, intensity))
     
     def process(self, audio_data):
         """
-        Aplicar cadena de efectos al audio de forma optimizada
+        Aplicar efectos al audio de forma optimizada
         
         Args:
             audio_data: numpy array del audio
@@ -53,15 +64,15 @@ class EffectsManager:
         if audio_data is None or len(audio_data) == 0:
             return audio_data
         
-        # Control de frecuencia de procesamiento para evitar lag
+        # Control de frecuencia de procesamiento
         import time
         current_time = time.time()
         if current_time - self.last_process_time < self.process_interval:
-            return audio_data  # Saltar procesamiento si es muy frecuente
+            return audio_data
         
         self.last_process_time = current_time
         
-        # Si intensidad es muy baja, no aplicar efectos para evitar lag
+        # Si intensidad es muy baja, no aplicar efectos
         if self.intensity <= 5:
             return audio_data
         
@@ -69,10 +80,9 @@ class EffectsManager:
         intensity_factor = self.intensity / 100.0
         
         # Solo procesar si hay efectos activos significativos
-        total_mix = (self.reverb_mix + self.delay_mix + self.compressor_mix + 
-                    self.filter_mix + self.saturation_mix) / 100.0
+        total_mix = (self.compressor_mix + self.reverb_mix) / 100.0
         
-        if total_mix < 0.1:  # Menos del 10% de mix total
+        if total_mix < 0.1:
             return audio_data
         
         # Preservar dimensiones originales del audio
@@ -82,38 +92,21 @@ class EffectsManager:
         dry = audio_data.copy()
         wet = audio_data.copy()
         
-        # Aplicar efectos de forma optimizada (máximo 3 efectos simultáneos)
-        effects_applied = 0
-        max_effects = 3  # Aumentar a 3 para incluir más efectos
+        # Aplicar compresor primero
+        if self.compressor_mix > 10:
+            wet = self._apply_compressor(wet)
         
-        # Priorizar efectos más importantes
-        if self.reverb_mix > 10 and effects_applied < max_effects:
-            wet = self._apply_reverb_simple(wet)
-            effects_applied += 1
-        
-        if self.delay_mix > 10 and effects_applied < max_effects:
-            wet = self._apply_delay_simple(wet)
-            effects_applied += 1
-        
-        if self.compressor_mix > 10 and effects_applied < max_effects:
-            wet = self._apply_compressor_simple(wet)
-            effects_applied += 1
-        
-        if self.filter_mix > 10 and effects_applied < max_effects:
-            wet = self._apply_filter_simple(wet)
-            effects_applied += 1
-        
-        if self.saturation_mix > 10 and effects_applied < max_effects:
-            wet = self._apply_saturation_simple(wet)
-            effects_applied += 1
+        # Aplicar reverb después
+        if self.reverb_mix > 10:
+            wet = self._apply_reverb(wet)
         
         # Mix dry/wet con intensidad general
         processed = dry * (1.0 - intensity_factor) + wet * intensity_factor
         
         return processed
     
-    def _apply_reverb_simple(self, audio):
-        """Reverb simplificado para evitar lag"""
+    def _apply_compressor(self, audio):
+        """Compresor de alta calidad"""
         # Preservar dimensiones originales
         original_shape = audio.shape
         
@@ -123,74 +116,48 @@ class EffectsManager:
         else:
             audio_flat = audio
         
-        # Reverb muy simple: solo un delay corto con feedback bajo
-        delay_samples = int(0.03 * self.sample_rate)  # 30ms
-        delay_samples = min(delay_samples, len(audio_flat) - 1)
+        # Compresor con lookahead y suavizado
+        threshold = self.compressor_threshold
+        ratio = self.compressor_ratio
+        attack = 0.01  # 10ms attack
+        release = 0.1  # 100ms release
         
-        if delay_samples > 0:
-            # Aplicar delay simple
-            delayed = np.concatenate([np.zeros(delay_samples), audio_flat[:-delay_samples]])
-            # Mix con feedback bajo
-            feedback = 0.3
-            wet = self.reverb_mix / 100.0
-            processed_flat = audio_flat * (1.0 - wet) + delayed * wet * feedback
-        else:
-            processed_flat = audio_flat
+        # Calcular ganancia de compresión
+        gain_reduction = np.zeros_like(audio_flat)
         
-        # Restaurar dimensiones originales
-        return processed_flat.reshape(original_shape)
-    
-    def _apply_delay_simple(self, audio):
-        """Delay simplificado para evitar lag"""
-        # Preservar dimensiones originales
-        original_shape = audio.shape
+        for i in range(len(audio_flat)):
+            # Detectar nivel de señal
+            level = abs(audio_flat[i])
+            
+            if level > threshold:
+                # Calcular reducción de ganancia
+                excess = level - threshold
+                reduction = excess * (1 - 1/ratio)
+                
+                # Aplicar attack/release
+                if i > 0:
+                    prev_reduction = gain_reduction[i-1]
+                    if reduction > prev_reduction:
+                        # Attack
+                        gain_reduction[i] = prev_reduction + (reduction - prev_reduction) * attack
+                    else:
+                        # Release
+                        gain_reduction[i] = prev_reduction + (reduction - prev_reduction) * release
+                else:
+                    gain_reduction[i] = reduction
+            else:
+                if i > 0:
+                    # Release cuando está por debajo del threshold
+                    gain_reduction[i] = gain_reduction[i-1] * (1 - release)
+                else:
+                    gain_reduction[i] = 0
         
-        # Trabajar con audio plano para procesamiento
-        if audio.ndim > 1:
-            audio_flat = audio.flatten()
-        else:
-            audio_flat = audio
-        
-        # Delay simple sin buffer circular
-        delay_samples = int(self.delay_time * 0.3 * self.sample_rate)  # Max 300ms
-        delay_samples = min(delay_samples, len(audio_flat) - 1)
-        
-        if delay_samples > 0:
-            # Aplicar delay simple
-            delayed = np.concatenate([np.zeros(delay_samples), audio_flat[:-delay_samples]])
-            # Mix con feedback bajo
-            feedback = 0.2
-            wet = self.delay_mix / 100.0
-            processed_flat = audio_flat * (1.0 - wet) + delayed * wet * feedback
-        else:
-            processed_flat = audio_flat
-        
-        # Restaurar dimensiones originales
-        return processed_flat.reshape(original_shape)
-    
-    def _apply_compressor_simple(self, audio):
-        """Compresor simplificado para evitar lag"""
-        # Preservar dimensiones originales
-        original_shape = audio.shape
-        
-        # Trabajar con audio plano para procesamiento
-        if audio.ndim > 1:
-            audio_flat = audio.flatten()
-        else:
-            audio_flat = audio
-        
-        # Compresión simple: reducir picos altos
-        threshold = 0.7
-        ratio = 2.0
-        
-        # Aplicar compresión solo a picos altos
+        # Aplicar compresión
         compressed = audio_flat.copy()
-        mask = np.abs(audio_flat) > threshold
-        
+        mask = gain_reduction > 0
         if np.any(mask):
-            # Reducir picos por el ratio
             compressed[mask] = np.sign(audio_flat[mask]) * (
-                threshold + (np.abs(audio_flat[mask]) - threshold) / ratio
+                np.abs(audio_flat[mask]) - gain_reduction[mask]
             )
         
         # Mix con el original
@@ -200,210 +167,69 @@ class EffectsManager:
         # Restaurar dimensiones originales
         return processed_flat.reshape(original_shape)
     
-    def _apply_filter_simple(self, audio):
-        """Filtro simplificado para evitar lag"""
-        # Preservar dimensiones originales
-        original_shape = audio.shape
-        
-        # Trabajar con audio plano para procesamiento
-        if audio.ndim > 1:
-            audio_flat = audio.flatten()
-        else:
-            audio_flat = audio
-        
-        # Filtro low-pass simple de un polo
-        cutoff_hz = 200 + (self.filter_cutoff * 7800)  # 200Hz - 8kHz
-        alpha = min(2.0 * np.pi * cutoff_hz / self.sample_rate, 1.0)
-        
-        # Aplicar filtro simple
-        filtered = np.zeros_like(audio_flat)
-        filtered[0] = audio_flat[0]
-        
-        for i in range(1, len(audio_flat)):
-            filtered[i] = alpha * audio_flat[i] + (1 - alpha) * filtered[i-1]
-        
-        # Mix con el original
-        wet = self.filter_mix / 100.0
-        processed_flat = audio_flat * (1.0 - wet) + filtered * wet
-        
-        # Restaurar dimensiones originales
-        return processed_flat.reshape(original_shape)
-    
-    def _apply_saturation_simple(self, audio):
-        """Saturación simplificada para evitar lag"""
-        # Preservar dimensiones originales
-        original_shape = audio.shape
-        
-        # Trabajar con audio plano para procesamiento
-        if audio.ndim > 1:
-            audio_flat = audio.flatten()
-        else:
-            audio_flat = audio
-        
-        # Saturación simple usando tanh
-        drive = 1.0 + (self.saturation_drive * 2.0)  # 1.0 a 3.0
-        driven = audio_flat * drive
-        
-        # Aplicar saturación
-        saturated = np.tanh(driven) / np.tanh(drive)
-        
-        # Mix con el original
-        wet = self.saturation_mix / 100.0
-        processed_flat = audio_flat * (1.0 - wet) + saturated * wet
-        
-        # Restaurar dimensiones originales
-        return processed_flat.reshape(original_shape)
-    
-    def _apply_compressor(self, audio):
-        """Compresor dinámico simple"""
-        threshold = self.compressor_threshold
-        ratio = self.compressor_ratio
-        
-        # Detectar envolvente
-        envelope = np.abs(audio)
-        
-        # Aplicar compresión solo sobre threshold
-        mask = envelope > threshold
-        compressed = audio.copy()
-        
-        if np.any(mask):
-            # Reducir ganancia sobre threshold
-            over_amount = envelope[mask] - threshold
-            reduction = over_amount * (1 - 1/ratio)
-            compressed[mask] = np.sign(audio[mask]) * (threshold + over_amount - reduction)
-        
-        return compressed
-    
-    def _apply_saturation(self, audio):
-        """Saturación/distorsión suave"""
-        drive = 1.0 + (self.saturation_drive * 3.0)  # 1.0 a 4.0
-        driven = audio * drive
-        return np.tanh(driven) / np.tanh(drive)  # Normalizar
-    
-    def _apply_filter(self, audio):
-        """Filtro simple low-pass"""
-        # Cutoff mapea a frecuencia (200Hz - 8kHz)
-        cutoff_hz = 200 + (self.filter_cutoff * 7800)
-        
-        # Simple one-pole low-pass filter
-        alpha = 2.0 * np.pi * cutoff_hz / self.sample_rate
-        alpha = min(alpha, 1.0)
-        
-        filtered = np.zeros_like(audio)
-        filtered[0] = audio[0]
-        
-        for i in range(1, len(audio)):
-            filtered[i] = filtered[i-1] + alpha * (audio[i] - filtered[i-1])
-        
-        return filtered
-    
-    def _apply_delay(self, audio):
-        """Delay con feedback"""
-        delay_samples = int(self.delay_time * 0.5 * self.sample_rate)  # Max 500ms
-        delay_samples = max(1, min(delay_samples, self.delay_buffer_size - 1))
-        
-        output = audio.copy()
-        
-        for i in range(len(audio)):
-            # Leer del buffer con delay
-            read_pos = (self.delay_write_pos - delay_samples) % self.delay_buffer_size
-            delayed_sample = self.delay_buffer[read_pos]
-            
-            # Mix con señal original
-            output[i] = audio[i] + delayed_sample * 0.5
-            
-            # Escribir al buffer con feedback
-            self.delay_buffer[self.delay_write_pos] = (
-                audio[i] + delayed_sample * self.delay_feedback
-            )
-            
-            self.delay_write_pos = (self.delay_write_pos + 1) % self.delay_buffer_size
-        
-        return output
-    
     def _apply_reverb(self, audio):
-        """Reverb simple basado en comb filters"""
-        # Delays para simular reverb (en samples)
+        """Reverb de alta calidad con algoritmo de sala"""
+        # Preservar dimensiones originales
+        original_shape = audio.shape
+        
+        # Trabajar con audio plano para procesamiento
+        if audio.ndim > 1:
+            audio_flat = audio.flatten()
+        else:
+            audio_flat = audio
+        
+        # Parámetros del reverb
+        room_size = self.reverb_room_size
+        damping = self.reverb_damping
+        
+        # Calcular delays para diferentes reflexiones
         delays = [
-            int(0.0297 * self.sample_rate),
-            int(0.0371 * self.sample_rate),
-            int(0.0411 * self.sample_rate),
-            int(0.0437 * self.sample_rate)
+            int(0.03 * self.sample_rate),  # 30ms
+            int(0.05 * self.sample_rate),  # 50ms
+            int(0.07 * self.sample_rate),  # 70ms
+            int(0.11 * self.sample_rate),  # 110ms
+            int(0.13 * self.sample_rate),  # 130ms
         ]
         
-        decays = [0.7, 0.6, 0.5, 0.4]
+        # Aplicar reverb con múltiples delays
+        reverb_out = np.zeros_like(audio_flat)
         
-        reverb_signal = np.zeros_like(audio)
+        for delay_samples in delays:
+            if delay_samples < len(audio_flat):
+                # Crear señal retardada
+                delayed = np.concatenate([
+                    np.zeros(delay_samples),
+                    audio_flat[:-delay_samples]
+                ])
+                
+                # Aplicar damping (filtro pasa-bajos)
+                if len(delayed) > 1:
+                    alpha = damping
+                    filtered = np.zeros_like(delayed)
+                    filtered[0] = delayed[0]
+                    
+                    for i in range(1, len(delayed)):
+                        filtered[i] = alpha * delayed[i] + (1 - alpha) * filtered[i-1]
+                    
+                    delayed = filtered
+                
+                # Mix con la señal original
+                reverb_out += delayed * room_size * 0.2
         
-        for delay, decay in zip(delays, decays):
-            if delay < len(audio):
-                delayed = np.concatenate([np.zeros(delay), audio[:-delay]])
-                reverb_signal += delayed * decay
+        # Limitar el reverb para evitar feedback excesivo
+        reverb_out = np.clip(reverb_out, -1.0, 1.0)
         
-        # Mix dry/wet
+        # Mix con el original
         wet = self.reverb_mix / 100.0
-        dry = 1.0 - wet * 0.5  # No reducir tanto el dry
+        processed_flat = audio_flat * (1.0 - wet) + reverb_out * wet
         
-        return audio * dry + reverb_signal * wet
-    
-    
-    # Métodos para control de mix e intensidad
-    def set_reverb_mix(self, mix):
-        """Establecer mix de reverb (0-100%)"""
-        self.reverb_mix = max(0.0, min(100.0, mix))
-    
-    def set_delay_mix(self, mix):
-        """Establecer mix de delay (0-100%)"""
-        self.delay_mix = max(0.0, min(100.0, mix))
-    
-    def set_compressor_mix(self, mix):
-        """Establecer mix de compressor (0-100%)"""
-        self.compressor_mix = max(0.0, min(100.0, mix))
-    
-    def set_filter_mix(self, mix):
-        """Establecer mix de filter (0-100%)"""
-        self.filter_mix = max(0.0, min(100.0, mix))
-    
-    def set_saturation_mix(self, mix):
-        """Establecer mix de saturation (0-100%)"""
-        self.saturation_mix = max(0.0, min(100.0, mix))
-    
-    def set_intensity(self, intensity):
-        """Establecer intensidad general (0-100%)"""
-        self.intensity = max(0.0, min(100.0, intensity))
-    
-    def get_intensity(self):
-        """Obtener intensidad general actual"""
-        return self.intensity
-    
-    def has_active_effects(self):
-        """Verificar si hay algún efecto activo"""
-        return (self.reverb_mix > 1.0 or
-                self.delay_mix > 1.0 or
-                self.saturation_mix > 1.0 or
-                self.filter_mix > 1.0 or
-                self.compressor_mix > 1.0 or
-                self.intensity > 1.0)
-    
-    def get_status(self):
-        """Obtener estado de todos los efectos"""
-        return {
-            'reverb_mix': int(self.reverb_mix),
-            'delay_mix': int(self.delay_mix),
-            'compressor_mix': int(self.compressor_mix),
-            'filter_mix': int(self.filter_mix),
-            'saturation_mix': int(self.saturation_mix),
-            'intensity': int(self.intensity)
-        }
+        # Restaurar dimensiones originales
+        return processed_flat.reshape(original_shape)
     
     def reset_all(self):
-        """Resetear todos los efectos a 0"""
-        self.reverb_mix = 0.0
-        self.delay_mix = 0.0
+        """Resetear todos los efectos"""
         self.compressor_mix = 0.0
-        self.filter_mix = 0.0
-        self.saturation_mix = 0.0
+        self.reverb_mix = 0.0
         self.intensity = 0.0
-        self.compressor_ratio = 1.0
-        self.delay_buffer.fill(0)
-
+        self.reverb_buffer.fill(0)
+        self.reverb_pos = 0
