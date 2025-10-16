@@ -75,6 +75,10 @@ class EffectsManager:
         if total_mix < 0.1:  # Menos del 10% de mix total
             return audio_data
         
+        # Asegurar que el audio sea 1D
+        if audio_data.ndim > 1:
+            audio_data = audio_data.flatten()
+        
         # Audio original (dry) y procesado (wet)
         dry = audio_data.copy()
         wet = audio_data.copy()
@@ -111,6 +115,10 @@ class EffectsManager:
     
     def _apply_reverb_simple(self, audio):
         """Reverb simplificado para evitar lag"""
+        # Asegurar que sea 1D
+        if audio.ndim > 1:
+            audio = audio.flatten()
+        
         # Reverb muy simple: solo un delay corto con feedback bajo
         delay_samples = int(0.03 * self.sample_rate)  # 30ms
         delay_samples = min(delay_samples, len(audio) - 1)
@@ -127,6 +135,10 @@ class EffectsManager:
     
     def _apply_delay_simple(self, audio):
         """Delay simplificado para evitar lag"""
+        # Asegurar que sea 1D
+        if audio.ndim > 1:
+            audio = audio.flatten()
+        
         # Delay simple sin buffer circular
         delay_samples = int(self.delay_time * 0.3 * self.sample_rate)  # Max 300ms
         delay_samples = min(delay_samples, len(audio) - 1)
@@ -143,6 +155,10 @@ class EffectsManager:
     
     def _apply_compressor_simple(self, audio):
         """Compresor simplificado para evitar lag"""
+        # Asegurar que sea 1D
+        if audio.ndim > 1:
+            audio = audio.flatten()
+        
         # Compresión simple: reducir picos altos
         threshold = 0.7
         ratio = 2.0
@@ -163,6 +179,10 @@ class EffectsManager:
     
     def _apply_filter_simple(self, audio):
         """Filtro simplificado para evitar lag"""
+        # Asegurar que sea 1D
+        if audio.ndim > 1:
+            audio = audio.flatten()
+        
         # Filtro low-pass simple de un polo
         cutoff_hz = 200 + (self.filter_cutoff * 7800)  # 200Hz - 8kHz
         alpha = min(2.0 * np.pi * cutoff_hz / self.sample_rate, 1.0)
@@ -180,6 +200,10 @@ class EffectsManager:
     
     def _apply_saturation_simple(self, audio):
         """Saturación simplificada para evitar lag"""
+        # Asegurar que sea 1D
+        if audio.ndim > 1:
+            audio = audio.flatten()
+        
         # Saturación simple usando tanh
         drive = 1.0 + (self.saturation_drive * 2.0)  # 1.0 a 3.0
         driven = audio * drive
