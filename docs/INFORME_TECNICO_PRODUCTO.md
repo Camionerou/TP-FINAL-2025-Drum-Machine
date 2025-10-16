@@ -1,27 +1,60 @@
 # INFORME TÉCNICO DE PRODUCTO
 ## Raspberry Pi Drum Machine - Sistema de Secuenciador Musical Profesional
 
+**Departamento:** Electrotecnia  
+**Instituto:** Politécnico Superior "Gral. San Martín"  
+**Carrera:** Electrónica  
+**Curso:** 6to Año  
+**Promoción:** 2025  
 **Integrantes:** Enzo Saldivia y Joaquín Aguerreberry  
-**Institución:** IPS 6to Electro 2025  
-**Versión del Sistema:** 3.1 - Efectos Optimizados  
-**Última actualización:** 16 de Octubre de 2025  
-**Repositorio:** [github.com/Camionerou/TP-FINAL-2025-Drum-Machine](https://github.com/Camionerou/TP-FINAL-2025-Drum-Machine)
+**Fecha de presentación:** 16 de Octubre de 2025  
+**Nombre del Proyecto:** Drum Machine Profesional con Raspberry Pi
 
 ---
 
 ## ÍNDICE
 
-1. [Informe Técnico de Producto](#1-informe-técnico-de-producto)
-   - 1.3. [Introducción](#13-introducción)
-   - 1.4. [Detalles Técnicos](#14-detalles-técnicos)
-     - 1.4.1. [Especificaciones](#141-especificaciones)
-     - 1.4.2. [Diagrama de Bloques Funcional](#142-diagrama-de-bloques-funcional)
-2. [Listado de Materiales, Costos y Proveedores](#2-listado-de-materiales-costos-y-proveedores)
-3. [Avances y Evolución del Proyecto](#3-avances-y-evolución-del-proyecto)
+- 1. [Informe Técnico de Producto](#1-informe-técnico-de-producto)
+  - 1.1. [Carátula](#11-carátula)
+  - 1.2. [Índice](#12-índice)
+  - 1.3. [Introducción](#13-introducción)
+  - 1.4. [Detalles Técnicos](#14-detalles-técnicos)
+    - 1.4.1. [Especificaciones](#141-especificaciones)
+    - 1.4.2. [Diagrama de Bloques Funcional](#142-diagrama-de-bloques-funcional)
+    - 1.4.3. [Diseño de Bloques](#143-diseño-de-bloques)
+      - 1.4.3.1. [Descripción y Explicación del Bloque](#1431-descripción-y-explicación-del-bloque)
+      - 1.4.3.2. [Diseño Esquemático de Circuito](#1432-diseño-esquemático-de-circuito)
+      - 1.4.3.3. [Programación](#1433-programación)
+      - 1.4.3.4. [Cálculos](#1434-cálculos)
+      - 1.4.3.5. [Simulaciones y Pruebas de Funcionamiento](#1435-simulaciones-y-pruebas-de-funcionamiento)
+    - 1.4.4. [Inconvenientes durante el Desarrollo](#144-inconvenientes-durante-el-desarrollo)
+    - 1.4.5. [Listado de Materiales](#145-listado-de-materiales)
+  - 1.5. [Bibliografía y Referencias WEB](#15-bibliografía-y-referencias-web)
+- 2. [Manual de Usuario](#2-manual-de-usuario)
+  - 2.1. [Conexionado](#21-conexionado)
+  - 2.2. [Modos de Funcionamiento y Señales Indicadoras](#22-modos-de-funcionamiento-y-señales-indicadoras)
+  - 2.3. [Forma de Acceso a la Información](#23-forma-de-acceso-a-la-información)
+  - 2.4. [Procedimientos ante Fallas](#24-procedimientos-ante-fallas)
+  - 2.5. [Calibración](#25-calibración)
 
 ---
 
 ## 1. INFORME TÉCNICO DE PRODUCTO
+
+### 1.1. Carátula
+
+**Departamento:** Electrotecnia  
+**Instituto:** Politécnico Superior "Gral. San Martín"  
+**Carrera:** Electrónica  
+**Curso:** 6to Año  
+**Promoción:** 2025  
+**Integrantes:** Enzo Saldivia y Joaquín Aguerreberry  
+**Fecha de presentación:** 16 de Octubre de 2025  
+**Nombre del Proyecto:** Drum Machine Profesional con Raspberry Pi
+
+### 1.2. Índice
+
+Ver índice completo en la sección anterior.
 
 ### 1.3. Introducción
 
@@ -1067,24 +1100,266 @@ graph LR
 | FPS display | Variable | Variable | 60 | 60 | 60 | 60 | 60 | 60 | 60 |
 | Arquitectura | Monolítica | Monolítica | Monolítica | Modular UI | UI optimizada | Audio profesional | Modular completa | Efectos master | Ultra optimizada |
 
-### 3.5. Desafíos Superados
+### 1.4.4. Inconvenientes durante el Desarrollo
 
-#### Desafío 1: Espejado del Display (Commit 3af2998)
-**Problema:** Display LED mostraba imagen reflejada  
-**Solución:** Inversión del eje X en rutinas de renderizado  
-**Impacto:** Visualización correcta de todas las vistas
+#### Problema 1: Espejado del Display LED
+**Descripción:** El display LED mostraba la imagen reflejada horizontalmente, haciendo que las vistas fueran ilegibles.
 
-#### Desafío 2: Volumen Bajo (Commits fd0f4b6 - cff2875)
-**Problema:** Audio con volumen insuficiente incluso al máximo  
-**Solución multifacética:**
-1. Boost de ganancia ×2
-2. Volúmenes extendidos 0-200%
-3. AudioProcessor con numpy
-4. Soft limiter para evitar distorsión
+**Causa:** Configuración incorrecta del eje X en las rutinas de renderizado del MAX7219.
 
-**Resultado:** Rango dinámico completo sin clipping
+**Solución implementada:** Inversión del eje X en todas las funciones de dibujo mediante configuración específica del driver MAX7219.
 
-#### Desafío 3: Optimización de Efectos (Commits 261bcc7 - bf846a8)
+**Resultado:** Visualización correcta de todas las vistas del sistema.
+
+#### Problema 2: Volumen de Audio Insuficiente
+**Descripción:** Los samples de audio se reproducían a volumen muy bajo, dificultando su audición en el ambiente de trabajo.
+
+**Causa:** Configuración conservadora de ganancia en el AudioProcessor para evitar distorsión.
+
+**Solución implementada:** 
+- Implementación de boost de ganancia x2
+- Soft limiter con función tanh para evitar clipping
+- Normalización de volúmenes al 100% por defecto
+
+**Resultado:** Audio audible y profesional sin distorsión.
+
+#### Problema 3: Lag en Potenciómetros y Efectos
+**Descripción:** El sistema experimentaba lag significativo al mover potenciómetros y al aplicar efectos de audio, afectando la usabilidad.
+
+**Causa:** Procesamiento de efectos demasiado intensivo y frecuencia de lectura de ADC muy alta.
+
+**Solución implementada:**
+- Optimización ultra del sistema de efectos
+- Reducción de frecuencia de procesamiento a 1000ms
+- Simplificación de algoritmos de efectos
+- Cache inteligente para evitar reprocesamiento
+
+**Resultado:** Sistema sin lag con latencia <2ms optimizada.
+
+#### Problema 4: Efectos No Audibles
+**Descripción:** Los efectos de audio (compresor y EQ) no eran perceptibles durante la reproducción.
+
+**Causa:** Algoritmos de efectos demasiado conservadores y umbrales de activación muy altos.
+
+**Solución implementada:**
+- Simplificación de algoritmos de efectos
+- Reducción de umbrales de activación
+- Implementación de efectos más agresivos pero controlados
+
+**Resultado:** Efectos claramente audibles y funcionales.
+
+### 1.4.5. Listado de Materiales
+
+#### Componentes Principales
+
+| Componente | Cantidad | Precio Unit. (USD) | Precio Total (USD) | Proveedor |
+|------------|----------|-------------------|-------------------|-----------|
+| Raspberry Pi 3 B+ | 1 | $35.00 | $35.00 | Adafruit |
+| Tarjeta microSD 16GB Clase 10 | 1 | $8.00 | $8.00 | Amazon |
+| Fuente 5V 2.5A micro USB | 1 | $7.00 | $7.00 | Adafruit |
+| MCP3008 ADC (8 canales) | 1 | $4.50 | $4.50 | SparkFun |
+| MAX7219 Display Driver | 1 | $3.00 | $3.00 | AliExpress |
+| Matriz LED 8×32 | 1 | $15.00 | $15.00 | Adafruit |
+| **Subtotal Principales** | | | **$72.50** | |
+
+#### Interfaz de Usuario
+
+| Componente | Cantidad | Precio Unit. (USD) | Precio Total (USD) | Proveedor |
+|------------|----------|-------------------|-------------------|-----------|
+| Pulsador momentáneo 12mm | 16 | $0.50 | $8.00 | Digi-Key |
+| LED 5mm Rojo | 8 | $0.20 | $1.60 | Digi-Key |
+| LED 5mm Verde | 2 | $0.20 | $0.40 | Digi-Key |
+| Resistencia 220Ω | 10 | $0.05 | $0.50 | Digi-Key |
+| Resistencia 10kΩ | 10 | $0.05 | $0.50 | Digi-Key |
+| Potenciómetro 10kΩ lineal | 8 | $2.00 | $16.00 | Digi-Key |
+| Perilla para potenciómetro | 8 | $1.00 | $8.00 | Digi-Key |
+| **Subtotal Interfaz** | | | **$35.00** | |
+
+#### Componentes Opcionales
+
+| Componente | Cantidad | Precio Unit. (USD) | Precio Total (USD) | Proveedor |
+|------------|----------|-------------------|-------------------|-----------|
+| Display OLED 128x64 I2C | 1 | $12.00 | $12.00 | Adafruit |
+| DAC PCM5102 I2S | 1 | $8.00 | $8.00 | SparkFun |
+| Gabinete impreso 3D | 1 | $25.00 | $25.00 | Servicio local |
+| **Subtotal Opcionales** | | | **$45.00** | |
+
+**Costo Total del Proyecto:**
+- **Versión básica:** $107.50 USD
+- **Versión con mejoras:** $152.50 USD
+
+**Cotización USD:** $1 USD = $1,200 ARS (Octubre 2025)
+
+### 1.5. Bibliografía y Referencias WEB
+
+#### Documentación Técnica
+1. **Raspberry Pi Foundation** - [raspberrypi.org](https://www.raspberrypi.org/documentation/)
+   - Documentación oficial de GPIO y SPI
+   - Guías de configuración de hardware
+
+2. **Pygame Documentation** - [pygame.org](https://www.pygame.org/docs/)
+   - Documentación de pygame.mixer para audio
+   - Ejemplos de implementación
+
+3. **MCP3008 Datasheet** - Microchip Technology
+   - Especificaciones técnicas del ADC
+   - Diagramas de conexión SPI
+
+4. **MAX7219 Datasheet** - Maxim Integrated
+   - Configuración del driver de display
+   - Protocolo de comunicación SPI
+
+#### Referencias de Desarrollo
+5. **NumPy Documentation** - [numpy.org](https://numpy.org/doc/)
+   - Procesamiento de arrays para audio
+   - Optimizaciones de rendimiento
+
+6. **Python GPIO Libraries** - [pypi.org](https://pypi.org/project/RPi.GPIO/)
+   - Control de pines GPIO
+   - Implementación de SPI
+
+7. **Drum Machine Design Patterns** - [soundonsound.com](https://www.soundonsound.com/)
+   - Patrones de diseño de secuenciadores
+   - Algoritmos de swing y timing
+
+#### Recursos de Audio
+8. **Audio Processing Tutorials** - [dspguide.com](https://www.dspguide.com/)
+   - Fundamentos de procesamiento digital de señales
+   - Algoritmos de efectos de audio
+
+9. **Sample Libraries** - [freesound.org](https://freesound.org/)
+   - Samples de batería gratuitos
+   - Formatos de audio WAV
+
+#### Hardware y Electrónica
+10. **Electronics Tutorials** - [electronics-tutorials.ws](https://www.electronics-tutorials.ws/)
+    - Fundamentos de circuitos analógicos
+    - Diseño de interfaces de usuario
+
+11. **SPI Protocol Guide** - [circuitbasics.com](https://www.circuitbasics.com/)
+    - Protocolo de comunicación SPI
+    - Implementación con Raspberry Pi
+
+---
+
+## 2. MANUAL DE USUARIO
+
+### 2.1. Conexionado
+
+#### Alimentación
+- **Fuente:** 5V DC, 2.5A mínimo
+- **Conector:** Micro USB en Raspberry Pi
+- **Protección:** Fusible 2A en línea positiva
+
+#### Datos
+- **GPIO:** 40 pines disponibles
+- **SPI:** MCP3008 (CE1) y MAX7219 (CE0)
+- **I2C:** Disponible para expansiones futuras
+
+#### Conexiones Principales
+```
+Raspberry Pi 3 B+          Periférico
+GPIO 10 (MOSI)     →       MCP3008 DIN, MAX7219 DIN
+GPIO 9 (MISO)      →       MCP3008 DOUT
+GPIO 11 (SCLK)     →       MCP3008 CLK, MAX7219 CLK
+GPIO 8 (CE0)       →       MAX7219 CS
+GPIO 7 (CE1)       →       MCP3008 CS
+GPIO 18, 23, 24, 25 →      Matriz de botones 4×4
+GPIO 12, 16, 20, 21 →      LEDs indicadores
+```
+
+### 2.2. Modos de Funcionamiento y Señales Indicadoras
+
+#### Modo PAD
+- **Activación:** Botón MODE (BTN 9)
+- **Función:** Tocar instrumentos en tiempo real
+- **Indicador:** LED azul encendido
+- **Botones 0-7:** Triggers de instrumentos
+
+#### Modo SEQUENCER
+- **Activación:** Botón MODE (BTN 9)
+- **Función:** Programar y reproducir patrones
+- **Indicador:** LED verde encendido
+- **Botones 0-7:** Programar pasos del secuenciador
+
+#### Modo EFFECTS
+- **Activación:** Hold BTN 12 (CLEAR) por 1 segundo
+- **Función:** Controlar efectos de audio
+- **Indicador:** LED blanco parpadeante
+- **Potenciómetros 0-2:** Control de efectos individuales
+
+### 2.3. Forma de Acceso a la Información
+
+#### Display LED 8×32
+- **Vista BPM:** Muestra tempo actual (30-300)
+- **Vista Swing:** Muestra porcentaje de swing (0-50%)
+- **Vista Volúmenes:** Muestra niveles de instrumentos
+- **Vista Efectos:** Muestra parámetros de compresor y EQ
+- **Vista Patrón:** Muestra patrón actual (1-8)
+
+#### LEDs Indicadores
+- **LED Rojo:** Sistema en funcionamiento
+- **LED Verde:** Modo SEQUENCER activo
+- **LED Azul:** Modo PAD activo
+- **LED Blanco:** Modo EFFECTS activo
+- **LED Amarillo:** Reproducción en curso
+
+### 2.4. Procedimientos ante Fallas
+
+#### Sistema No Inicia
+1. Verificar conexión de alimentación
+2. Comprobar tarjeta microSD
+3. Revisar conexiones GPIO
+4. Reiniciar sistema
+
+#### Display No Funciona
+1. Verificar conexiones SPI (MOSI, SCLK, CE0)
+2. Comprobar alimentación 5V del MAX7219
+3. Revisar configuración del driver
+4. Reiniciar aplicación
+
+#### Audio No Reproduce
+1. Verificar conexión de audio (jack 3.5mm)
+2. Comprobar configuración de pygame
+3. Revisar archivos de samples
+4. Verificar permisos de audio
+
+#### Potenciómetros No Responden
+1. Verificar conexiones SPI del MCP3008
+2. Comprobar alimentación 3.3V
+3. Revisar configuración del ADC
+4. Calibrar valores de referencia
+
+### 2.5. Calibración
+
+#### Calibración de Potenciómetros
+1. **Procedimiento:**
+   - Mover potenciómetro a posición mínima
+   - Presionar BTN 13 (SAVE) por 2 segundos
+   - Mover potenciómetro a posición máxima
+   - Presionar BTN 13 (SAVE) por 2 segundos
+   - Sistema guarda valores de calibración
+
+#### Calibración de Audio
+1. **Procedimiento:**
+   - Reproducir sample de referencia
+   - Ajustar volumen master con potenciómetro 7
+   - Verificar que no hay distorsión
+   - Guardar configuración con BTN 13
+
+#### Calibración de Timing
+1. **Procedimiento:**
+   - Activar modo PAD
+   - Tocar botones en ritmo constante
+   - Ajustar BPM con potenciómetro 1
+   - Verificar sincronización visual
+
+#### Reset de Configuración
+1. **Procedimiento:**
+   - Mantener BTN 9 (MODE) y BTN 12 (CLEAR) presionados
+   - Encender sistema
+   - Mantener presionados por 5 segundos
+   - Sistema restaura configuración de fábrica
 **Problema:** Sistema de efectos complejo causaba lag y errores de dimensiones  
 **Solución simplificada:**
 1. Reducción a 2 efectos principales: Compresor y Reverb
