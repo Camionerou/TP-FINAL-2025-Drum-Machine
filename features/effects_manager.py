@@ -35,10 +35,14 @@ class EffectsManager:
         self.delay_buffer_size = int(0.5 * sample_rate)  # 500ms max
         self.delay_buffer = np.zeros(self.delay_buffer_size)
         self.delay_write_pos = 0
+        
+        # Control de frecuencia de procesamiento para evitar lag
+        self.last_process_time = 0
+        self.process_interval = 0.1  # Procesar máximo cada 100ms
     
     def process(self, audio_data):
         """
-        Aplicar cadena de efectos al audio con mix e intensidad
+        Aplicar cadena de efectos al audio de forma optimizada
         
         Args:
             audio_data: numpy array del audio
@@ -49,44 +53,81 @@ class EffectsManager:
         if audio_data is None or len(audio_data) == 0:
             return audio_data
         
-        # Si intensidad es 0, no aplicar efectos
-        if self.intensity <= 0:
+        # Control de frecuencia de procesamiento para evitar lag
+        import time
+        current_time = time.time()
+        if current_time - self.last_process_time < self.process_interval:
+            return audio_data  # Saltar procesamiento si es muy frecuente
+        
+        self.last_process_time = current_time
+        
+        # Si intensidad es muy baja, no aplicar efectos para evitar lag
+        if self.intensity <= 5:
             return audio_data
         
         # Calcular factor de intensidad (0-1)
         intensity_factor = self.intensity / 100.0
         
+        # Solo procesar si hay efectos activos significativos
+        total_mix = (self.reverb_mix + self.delay_mix + self.compressor_mix + 
+                    self.filter_mix + self.saturation_mix) / 100.0
+        
+        if total_mix < 0.1:  # Menos del 10% de mix total
+            return audio_data
+        
         # Audio original (dry) y procesado (wet)
         dry = audio_data.copy()
         wet = audio_data.copy()
         
-        # Aplicar efectos solo si tienen mix > 0
-        # 1. Compressor
-        if self.compressor_mix > 0:
-            wet = self._apply_compressor(wet)
+        # Aplicar efectos de forma optimizada (máximo 2 efectos simultáneos)
+        effects_applied = 0
+        max_effects = 2  # Limitar para evitar lag
         
-        # 2. Saturation
-        if self.saturation_mix > 0:
-            wet = self._apply_saturation(wet)
+        # Priorizar efectos más importantes
+        if self.reverb_mix > 10 and effects_applied < max_effects:
+            wet = self._apply_reverb_simple(wet)
+            effects_applied += 1
         
-        # 3. Filter
-        if self.filter_mix > 0:
-            wet = self._apply_filter(wet)
-        
-        # 4. Delay
-        if self.delay_mix > 0:
-            wet = self._apply_delay(wet)
-        
-        # 5. Reverb
-        if self.reverb_mix > 0:
-            wet = self._apply_reverb(wet)
+        if self.delay_mix > 10 and effects_applied < max_effects:
+            wet = self._apply_delay_simple(wet)
+            effects_applied += 1
         
         # Mix dry/wet con intensidad general
-        # Cada efecto contribuye según su mix individual
-        # Intensidad general controla el balance total
         processed = dry * (1.0 - intensity_factor) + wet * intensity_factor
         
         return processed
+    
+    def _apply_reverb_simple(self, audio):
+        """Reverb simplificado para evitar lag"""
+        # Reverb muy simple: solo un delay corto con feedback bajo
+        delay_samples = int(0.03 * self.sample_rate)  # 30ms
+        delay_samples = min(delay_samples, len(audio) - 1)
+        
+        if delay_samples > 0:
+            # Aplicar delay simple
+            delayed = np.concatenate([np.zeros(delay_samples), audio[:-delay_samples]])
+            # Mix con feedback bajo
+            feedback = 0.3
+            wet = self.reverb_mix / 100.0
+            return audio * (1.0 - wet) + delayed * wet * feedback
+        
+        return audio
+    
+    def _apply_delay_simple(self, audio):
+        """Delay simplificado para evitar lag"""
+        # Delay simple sin buffer circular
+        delay_samples = int(self.delay_time * 0.3 * self.sample_rate)  # Max 300ms
+        delay_samples = min(delay_samples, len(audio) - 1)
+        
+        if delay_samples > 0:
+            # Aplicar delay simple
+            delayed = np.concatenate([np.zeros(delay_samples), audio[:-delay_samples]])
+            # Mix con feedback bajo
+            feedback = 0.2
+            wet = self.delay_mix / 100.0
+            return audio * (1.0 - wet) + delayed * wet * feedback
+        
+        return audio
     
     def _apply_compressor(self, audio):
         """Compresor dinámico simple"""
