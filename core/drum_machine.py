@@ -245,9 +245,8 @@ class DrumMachine:
                 # Hold 1s: Toggle vista EFFECTS
                 self.effects_view_active = not self.effects_view_active
                 if self.effects_view_active:
-                    print("🎛️ Modo EFFECTS activado - Pots 0-5: Efectos individuales")
-                    print("  Pot 0: Reverb, Pot 1: Delay, Pot 2: Compressor")
-                    print("  Pot 3: Filter, Pot 4: Saturation, Pot 5: Intensidad")
+                    print("🎛️ Modo EFFECTS activado - Pots 0-2: Efectos individuales")
+                    print("  Pot 0: Compresor, Pot 1: Reverb, Pot 2: Intensidad")
                     self._show_effects_view()
                 else:
                     print("Vista EFFECTS desactivada")
@@ -528,14 +527,15 @@ class DrumMachine:
                 changes = np.abs(values_array - self._last_effects_values)
                 max_change_idx = np.argmax(changes)
                 
-                # Mostrar vista si hay cambio significativo (>5%) o si es la primera vez
+                # Mostrar vista si hay cambio significativo (>2%) o si es la primera vez
                 first_time = not hasattr(self, '_effects_view_shown')
-                if changes[max_change_idx] > 0.05 or first_time:  # Threshold más alto para reducir procesamiento
+                if changes[max_change_idx] > 0.02 or first_time:  # Threshold más bajo para mejor sensibilidad
                     self._effects_view_shown = True
                     
                     if max_change_idx == 0:  # Pot 0: Compresor
                         compressor_mix = values[0] * 100
                         effects.set_compressor_mix(compressor_mix)
+                        print(f"🎛️ Compresor: {compressor_mix:.1f}%")
                         self.view_manager.show_view(
                             ViewType.EFFECT_COMPRESSOR,
                             {'compressor_mix': compressor_mix}
@@ -543,6 +543,7 @@ class DrumMachine:
                     elif max_change_idx == 1:  # Pot 1: Reverb
                         reverb_mix = values[1] * 100
                         effects.set_reverb_mix(reverb_mix)
+                        print(f"🎛️ Reverb: {reverb_mix:.1f}%")
                         self.view_manager.show_view(
                             ViewType.EFFECT_REVERB,
                             {'reverb_mix': reverb_mix}
@@ -550,6 +551,7 @@ class DrumMachine:
                     elif max_change_idx == 2:  # Pot 2: Intensidad
                         intensity = values[2] * 100
                         effects.set_intensity(intensity)
+                        print(f"🎛️ Intensidad: {intensity:.1f}%")
                         self.view_manager.show_view(
                             ViewType.EFFECT_INTENSITY,
                             {'intensity': intensity}

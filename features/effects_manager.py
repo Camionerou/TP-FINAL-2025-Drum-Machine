@@ -217,7 +217,7 @@ class EffectsManager:
         
         # Múltiples delays para simular reflexiones naturales (optimizado)
         delay_times_ms = [40, 80, 120]  # ms - menos delays para mejor rendimiento
-        feedback_gains = [0.4, 0.3, 0.2]  # Feedback por delay
+        feedback_gains = [0.6, 0.5, 0.4]  # Feedback más fuerte para reverb más audible
         
         processed_audio = audio_flat.copy()
         
@@ -244,9 +244,9 @@ class EffectsManager:
             for i in range(1, len(processed_audio)):
                 filtered_audio[i] = alpha * processed_audio[i] + (1 - alpha) * filtered_audio[i-1]
         
-        # Mix con el original
+        # Mix con el original (reverb más audible)
         wet = self.reverb_mix / 100.0
-        processed_flat = audio_flat * (1.0 - wet) + filtered_audio * wet * 0.5
+        processed_flat = audio_flat * (1.0 - wet) + filtered_audio * wet * 0.8
         
         # Restaurar dimensiones originales
         return processed_flat.reshape(original_shape)
