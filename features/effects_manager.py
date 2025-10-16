@@ -29,9 +29,9 @@ class EffectsManager:
         self.skip_count = 0
         self.max_skip = 3  # Procesar cada 3 samples máximo
         
-        # Cache para evitar reprocesamiento
-        self.last_audio_hash = None
-        self.cached_result = None
+        # Cache simple para evitar reprocesamiento
+        self.last_cache_time = 0
+        self.cache_duration = 0.1  # Cache por 100ms
         
         # Buffers optimizados para reverb
         self.reverb_buffer = np.zeros(int(0.1 * sample_rate))  # Buffer más pequeño
@@ -65,15 +65,7 @@ class EffectsManager:
     
     def _invalidate_cache(self):
         """Invalidar cache cuando cambian parámetros"""
-        self.last_audio_hash = None
-        self.cached_result = None
-    
-    def _get_audio_hash(self, audio_data):
-        """Obtener hash simple del audio para cache"""
-        if len(audio_data) > 100:
-            # Usar solo algunos puntos para el hash
-            return hash(tuple(audio_data[::len(audio_data)//10]))
-        return hash(tuple(audio_data))
+        self.last_cache_time = 0
     
     def process(self, audio_data):
         """
@@ -110,10 +102,10 @@ class EffectsManager:
         if self.intensity <= 10:
             return audio_data
         
-        # Verificar cache
-        audio_hash = self._get_audio_hash(audio_data)
-        if audio_hash == self.last_audio_hash and self.cached_result is not None:
-            return self.cached_result
+        # Verificar cache simple basado en tiempo
+        current_time = time.time()
+        if current_time - self.last_cache_time < self.cache_duration:
+            return audio_data  # Retornar audio sin procesar si está en cache
         
         # Solo procesar si hay efectos activos significativos
         total_mix = (self.compressor_mix + self.reverb_mix) / 100.0
@@ -139,9 +131,8 @@ class EffectsManager:
         intensity_factor = self.intensity / 100.0
         processed = dry * (1.0 - intensity_factor) + wet * intensity_factor
         
-        # Cache del resultado
-        self.last_audio_hash = audio_hash
-        self.cached_result = processed.copy()
+        # Actualizar cache
+        self.last_cache_time = current_time
         
         return processed
     
