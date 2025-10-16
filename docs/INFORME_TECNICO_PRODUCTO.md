@@ -4,7 +4,7 @@
 **Integrantes:** Enzo Saldivia y Joaquín Aguerreberry  
 **Institución:** IPS 6to Electro 2025  
 **Versión del Sistema:** 3.1 - Efectos Optimizados  
-**Última actualización:** 15 de Enero de 2025  
+**Última actualización:** 16 de Octubre de 2025  
 **Repositorio:** [github.com/Camionerou/TP-FINAL-2025-Drum-Machine](https://github.com/Camionerou/TP-FINAL-2025-Drum-Machine)
 
 ---
@@ -47,33 +47,33 @@ El desarrollo de este proyecto atravesó **tres arquitecturas fundamentales** an
 timeline
     title Evolución de Arquitecturas del Proyecto
     section Fase 1
-        Julio 2024 : Arduino UNO/MEGA
-                   : DFPlayer Mini
-                   : 8 pasos, 4 instrumentos
-                   : Limitación: Latencia 50-100ms
+        12 Oct 2025 : Implementación inicial
+                   : Raspberry Pi Drum Machine
+                   : 32 pasos, 8 instrumentos
+                   : Sistema base funcional
     section Fase 2
-        Septiembre 2024 : Raspberry Pi 3 B+
-                        : Pygame audio nativo
-                        : 16 pasos, 8 instrumentos
-                        : Mejora: Latencia <10ms
+        12 Oct 2025 : Sistema de vistas dinámicas
+                   : ViewManager y ButtonHandler
+                   : Vistas especializadas
+                   : UI profesional
     section Fase 3
-        Octubre 2024 : RPi 3 B+ optimizado
-                     : Sistema de vistas dinámicas
-                     : 32 pasos, 8 instrumentos
-                     : Final: Latencia <5ms
+        12 Oct 2025 : Optimización de UI
+                   : Vistas limpias y centradas
+                   : Fuente 3x5 completa
+                   : Layout horizontal
     section Fase 4
-        Noviembre 2024 : Codebase reorganizado
-                      : Tap Tempo, Bluetooth, MIDI
-                      : Autoarranque, Optimización
-                      : v2.5: Drum machine profesional
+        12 Oct 2025 : Sistema de audio profesional
+                   : Samples WAV profesionales
+                   : Boost de ganancia x2
+                   : Normalización de volumen
     section Fase 5
-        Diciembre 2024 : Versión 3.0 Optimizada
-                       : Efectos profesionales
-                       : Compresor + Reverb
-                       : Rendimiento optimizado
-                       : Arquitectura modular
+        16 Oct 2025 : Versión 3.0 Optimizada
+                   : Efectos profesionales
+                   : Compresor + Reverb
+                   : Rendimiento optimizado
+                   : Arquitectura modular
     section Fase 6
-        Enero 2025 : Versión 3.1 Efectos Optimizados
+        16 Oct 2025 : Versión 3.1 Efectos Optimizados
                    : Reverb eliminado por lag
                    : EQ ligero implementado
                    : Lag completamente eliminado
@@ -157,7 +157,7 @@ timeline
 - Arquitectura: Modular con efectos simplificados
 - Rendimiento: Sin lag en potenciómetros ni disparo de sonidos
 
-##### **Fase 4: Reorganización y Features Profesionales (15 de Noviembre de 2024)**
+##### **Fase 4: Sistema de Audio Profesional (12 de Octubre de 2025)**
 
 **Versión:** 2.5 - Estado Actual
 
@@ -210,7 +210,7 @@ Estructura modular implementada:
 - Boot optimizado: ✅ 33% más rápido
 - Código modular: ✅ core/, ui/, features/, hardware/
 
-##### **Fase 5: Optimización y Simplificación (15 de Diciembre de 2024)**
+##### **Fase 5: Optimización y Simplificación (16 de Octubre de 2025)**
 
 **Versión:** 3.0 - Optimizada
 
@@ -814,7 +814,7 @@ gitGraph
 
 ### 3.2. Commit Log Detallado
 
-#### Fase 1: Implementación Base (12 de Julio de 2024)
+#### Fase 1: Implementación Base (12 de Octubre de 2025)
 
 **Commit inicial - b0b8399**
 - Drum Machine completa funcional
@@ -828,7 +828,7 @@ gitGraph
 - Guía de comandos rápidos
 - Instalación específica para RPi
 
-#### Fase 2: Sistema de Vistas Dinámicas (12 de Septiembre de 2024)
+#### Fase 2: Sistema de Vistas Dinámicas (12 de Octubre de 2025)
 
 **Arquitectura de vistas - 7eb824a**
 ```python
@@ -846,7 +846,7 @@ gitGraph
 - Guía completa del sistema
 - Changelog v2.0 con resumen
 
-#### Fase 3: Optimización de UI (12 de Octubre de 2024)
+#### Fase 3: Optimización de UI (12 de Octubre de 2025)
 
 **Mejoras visuales progresivas:**
 
@@ -879,7 +879,7 @@ VIEW_TIMEOUT = 1.0  # 2s → 1s
 - Formato: 44.1kHz, 16-bit, mono
 - Instrumentos: Kick, Snare, Hats, Toms, Cymbals
 
-#### Fase 4: Sistema de Audio Profesional (12-13 de Noviembre de 2024)
+#### Fase 4: Sistema de Audio Profesional (12 de Octubre de 2025)
 
 **Gestión de volumen inicial:**
 
@@ -1060,7 +1060,7 @@ Ver archivo `PINOUT.txt` en el repositorio para diagrama detallado ASCII art.
 
 ## 4. HISTORIAL DE COMMITS ACTUALIZADO
 
-### Commits Recientes (15 de Enero de 2025)
+### Commits Recientes (16 de Octubre de 2025)
 
 **Commit ce87b5f** - fix: Make EQ audible and eliminate remaining lag
 - EQ simplificado a multiplicación directa (boost 1.0x-1.5x)
@@ -1116,10 +1116,10 @@ Ver archivo `PINOUT.txt` en el repositorio para diagrama detallado ASCII art.
 
 ---
 **Versión del documento:** 3.1 - Efectos Optimizados  
-**Última actualización:** 15 de Enero de 2025  
+**Última actualización:** 16 de Octubre de 2025  
 **Estado:** Actualizado con cambios de efectos y optimizaciones de rendimiento
 
-*Documento actualizado el 15 de Enero de 2025*  
+*Documento actualizado el 16 de Octubre de 2025*  
 *Versión: 3.1 - Efectos Optimizados*  
 *Autores: Enzo Saldivia y Joaquín Aguerreberry*  
 *Institución: IPS 6to Electro 2025*  
