@@ -39,119 +39,92 @@ El dispositivo resultante permite a músicos, productores y entusiastas de la el
 - Sistema de control intuitivo sin lag en potenciómetros
 - Efectos audibles y funcionales sin impacto en rendimiento
 
-#### 1.3.2. Evolución del Proyecto: La Travesía Técnica
+#### 1.3.2. Arquitectura del Sistema
 
-El desarrollo de este proyecto atravesó **nueve fases de evolución** desde su concepción inicial con Arduino hasta el estado actual optimizado con Raspberry Pi. Cada fase representó una mejora significativa en capacidades, funcionalidades y rendimiento, demostrando la evolución natural de un proyecto de ingeniería musical que comenzó con limitaciones técnicas y evolucionó hacia una solución profesional.
+El sistema está construido sobre una **Raspberry Pi 3 B+** ejecutando Raspbian Linux, con una arquitectura modular que separa claramente las responsabilidades del hardware, procesamiento de audio, interfaz de usuario y gestión de efectos. Esta separación permite un mantenimiento sencillo y una escalabilidad futura del sistema.
 
 ```mermaid
-timeline
-    title Evolución Completa del Proyecto (Desde Arduino hasta RPi)
-    section Fase 1: Arduino Original
-        24 Jul 2025 : Proyecto iniciado con Arduino
-                   : DFPlayer Mini + Arduino UNO/MEGA
-                   : 8 pasos, 4 samples básicos
-                   : Latencia 50-100ms
-                   : Limitaciones de memoria
-    section Fase 2: Migración a Raspberry Pi
-        3 Sep 2025 : Decisión técnica de migración
-                   : Arduino → Raspberry Pi 3 B+
-                   : Procesamiento de audio nativo
-                   : Mayor memoria y velocidad
-                   : Sistema operativo completo
-    section Fase 3: Implementación RPi Base
-        12 Oct 2025 : Commit inicial b0b8399
-                   : Drum Machine completa funcional
-                   : Secuenciador 32 pasos, 8 instrumentos
-                   : Display LED 8×32, controles completos
-                   : Sistema base operativo
-    section Fase 4: Sistema de Vistas
-        12 Oct 2025 : Commit 7eb824a
-                   : ViewManager y ButtonHandler
-                   : Sistema de vistas dinámicas
-                   : Arquitectura de UI profesional
-    section Fase 5: Optimización UI
-        12 Oct 2025 : Commits 2b94ce1, 80cb933, 6120bbc
-                   : Refactorización main.py
-                   : Vistas limpias INFO/VOLUMES/PATTERN
-                   : Layout horizontal optimizado
-    section Fase 6: Audio Profesional
-        12 Oct 2025 : Commits 7eea403, fd0f4b6, 5dd01c4
-                   : Samples WAV profesionales
-                   : Boost ganancia x2
-                   : AudioProcessor profesional
-    section Fase 7: Reorganización Modular
-        15 Oct 2025 : Commits 6807fcd, 1eb47b9
-                   : Estructura modular
-                   : Tap Tempo y Bluetooth
-                   : Autoarranque systemd
-                   : v2.5 profesional
-    section Fase 8: Sistema de Efectos
-        15-16 Oct 2025 : Commits 3098504, 1f322c1, be7c3b8
-                       : Efectos master implementados
-                       : Reverb, Delay, Compressor, Filter, Saturation
-                       : Control mix e intensidad
-                       : Vistas individuales
-    section Fase 9: Optimización Final
-        16 Oct 2025 : Commits ce87b5f, a691536, c5f7973
-                   : Simplificación a Compresor + EQ
-                   : Eliminación completa de lag
-                   : Optimización ultra del sistema
-                   : v3.1 efectos optimizados
+graph TB
+    subgraph "Arquitectura Modular del Sistema"
+        subgraph HW["Hardware Layer"]
+            RPI[Raspberry Pi 3 B+<br/>Raspbian Linux]
+            GPIO[GPIO & SPI<br/>MCP3008 ADC<br/>MAX7219 Display<br/>Button Matrix]
+            AUDIO_HW[Audio Hardware<br/>Jack 3.5mm<br/>Bluetooth]
+        end
+        
+        subgraph APP["Application Layer"]
+            MAIN[main.py<br/>Loop principal 60 FPS]
+            SEQ[sequencer.py<br/>32 pasos × 8 instrumentos<br/>Swing y timing]
+            VIEW[view_manager.py<br/>Vistas dinámicas<br/>Timeouts automáticos]
+            BTN[button_handler.py<br/>Eventos de botones<br/>Hold/Double/Tap]
+        end
+        
+        subgraph AUDIO["Audio Processing"]
+            ENGINE[audio_engine.py<br/>pygame.mixer<br/>Latencia <2ms]
+            PROC[audio_processor.py<br/>DSP optimizado<br/>Soft limiter]
+            FX[effects_manager.py<br/>Compresor + EQ<br/>Control por pots]
+        end
+        
+        subgraph DATA["Data Management"]
+            SAMPLES[Samples WAV<br/>8 instrumentos<br/>44.1kHz 16-bit]
+            PATTERNS[Patrones<br/>32 pasos<br/>Almacenamiento local]
+        end
+    end
+    
+    HW --> APP
+    APP --> AUDIO
+    AUDIO --> DATA
+    AUDIO --> AUDIO_HW
+    
+    style HW fill:#e1f5ff
+    style APP fill:#fff3cd
+    style AUDIO fill:#d4edda
+    style DATA fill:#f8d7da
 ```
 
-##### **Fase 1: Arduino Original (24 de Julio de 2025)**
+##### **Funcionalidades Principales**
 
-**Proyecto inicial:** "Caja de ritmos" con Arduino
+**Secuenciador Musical:**
+- **Capacidad:** 32 pasos × 8 instrumentos simultáneos
+- **Tempo:** 30-300 BPM con control por potenciómetro
+- **Swing:** 0-50% para humanizar ritmos
+- **Modos:** PAD (tocar en vivo) y SEQUENCER (programar patrones)
+- **Patrones:** 8 patrones almacenables con cambio en tiempo real
 
-**Características implementadas:**
-- **Secuenciador:** 8 pasos con 4 samples básicos
-- **Audio:** DFPlayer Mini + Arduino UNO/MEGA
-- **Controles:** 8 pulsadores + 8 LEDs + 1 potenciómetro
-- **Samples:** Kick, snare, hi-hat cerrado, hi-hat abierto
-- **Tempo:** 60-180 BPM controlado por potenciómetro
+**Procesamiento de Audio:**
+- **Samples:** 8 instrumentos WAV profesionales (kick, snare, hats, toms, cymbals)
+- **Calidad:** 44.1kHz, 16-bit, mono
+- **Latencia:** <2ms ultra optimizada
+- **Efectos:** Compresor y EQ con control por potenciómetros
+- **Salida:** Jack 3.5mm estéreo + Bluetooth Audio
 
-**Limitaciones críticas encontradas:**
-- **Latencia de audio:** 50-100ms inaceptable para aplicaciones musicales
-- **Memoria limitada:** 32KB Flash, 2KB RAM insuficiente
-- **Sin multithreading:** Precisión temporal comprometida
-- **Polifonía limitada:** Solo 1 sample simultáneo
+**Interfaz de Usuario:**
+- **Display:** Matriz LED 8×32 con vistas dinámicas
+- **Controles:** 16 botones + 8 potenciómetros + 5 LEDs indicadores
+- **Vistas:** BPM, Swing, Volúmenes, Efectos, Patrones
+- **Eventos:** Click, doble-click, hold con timeouts automáticos
 
-**Especificaciones Fase 1:**
-- Secuenciador: 8 pasos × 4 instrumentos
-- Display: LEDs simples
-- Control: 8 botones + 8 LEDs + 1 pot
-- Audio: DFPlayer Mini + altavoz 3W
-- Latencia: 50-100ms
-- FPS: Variable
+##### **Especificaciones Técnicas**
 
-##### **Fase 2: Migración a Raspberry Pi (3 de Septiembre de 2025)**
+**Hardware:**
+- **Procesador:** Raspberry Pi 3 B+ (Broadcom BCM2837B0, quad-core 1.4GHz)
+- **Memoria:** 1GB LPDDR2 SDRAM
+- **Almacenamiento:** microSD 16GB Clase 10
+- **Conectividad:** WiFi 802.11ac, Bluetooth 4.2, Ethernet Gigabit
+- **GPIO:** 40 pines para control de hardware
 
-**Decisión técnica:** Migración de Arduino a Raspberry Pi 3 B+
+**Periféricos:**
+- **ADC:** MCP3008 (8 canales, 10-bit, SPI)
+- **Display:** MAX7219 (matriz LED 8×32, SPI)
+- **Botones:** Matriz 4×4 (16 botones, 8 GPIOs)
+- **Potenciómetros:** 8 unidades 10kΩ lineales
+- **LEDs:** 5 indicadores con resistencias 220Ω
 
-**Motivaciones técnicas:**
-- Procesamiento de audio nativo (sin DFPlayer Mini)
-- Sistema operativo completo (Linux/Raspbian)
-- Multithreading real para precisión temporal
-- Audio integrado (Jack 3.5mm)
-- Mayor memoria y velocidad (1GB RAM, quad-core 1.2GHz)
-
-**Ventajas del cambio:**
-- Latencia: <10ms vs 50-100ms anterior
-- Polifonía ilimitada
-- Secuenciador expandible a 32 pasos
-- Conectividad WiFi y Bluetooth integrados
-- Bibliotecas de audio profesionales (pygame, pydub)
-
-**Componentes eliminados:**
-- ❌ Módulo DFPlayer Mini
-- ❌ Tarjeta microSD para DFPlayer
-- ❌ Amplificador adicional
-
-**Nuevos componentes:**
-- ✅ Raspberry Pi 3 B+
-- ✅ Tarjeta microSD 16GB clase 10
-- ✅ Fuente de alimentación 5V 2.5A
-- ✅ Conversor de nivel lógico 3.3V-5V
+**Software:**
+- **Sistema Operativo:** Raspbian OS Lite
+- **Lenguaje:** Python 3.9+
+- **Bibliotecas:** pygame, numpy, RPi.GPIO, spidev
+- **Arquitectura:** Modular (core/, ui/, features/, hardware/)
 
 ##### **Fase 3: Implementación RPi Base (12 de Octubre de 2025)**
 
@@ -569,23 +542,23 @@ numpy==1.24.3          # Procesamiento DSP ultra optimizado
 
 ```mermaid
 graph TB
-    subgraph RPi["Raspberry Pi 3 B+ - Raspbian Linux v3.0"]
-        subgraph APP["Capa de Aplicación Python 3.9 Optimizada"]
-            MAIN[main.py<br/>Loop 60 FPS<br/>Optimizado]
-            SEQ[sequencer.py<br/>32 pasos × 8 inst<br/>Swing avanzado]
-            VIEW[view_manager.py<br/>10+ vistas dinámicas<br/>Timeouts inteligentes]
-            BTN[button_handler.py<br/>Eventos avanzados<br/>Hold/Double/Tap]
+    subgraph RPi["Raspberry Pi 3 B+ - Raspbian Linux v3.1"]
+        subgraph APP["Capa de Aplicación Python 3.9 Ultra Optimizada"]
+            MAIN[main.py<br/>Loop 60 FPS<br/>Ultra Optimizado]
+            SEQ[sequencer.py<br/>32 pasos × 8 inst<br/>Swing avanzado<br/>Cache timing]
+            VIEW[view_manager.py<br/>10+ vistas dinámicas<br/>Timeouts inteligentes<br/>Animaciones 200ms]
+            BTN[button_handler.py<br/>Eventos avanzados<br/>Hold/Double/Tap<br/>Debounce optimizado]
             
-            MAIN --> STATE[Gestor de Estado Global<br/>• Modo PAD/SEQ<br/>• Paso 0-31<br/>• Patrón 1-8<br/>• Efectos activos]
+            MAIN --> STATE[Gestor de Estado Global<br/>• Modo PAD/SEQ<br/>• Paso 0-31<br/>• Patrón 1-8<br/>• Efectos Compresor+EQ<br/>• Intensidad 0-100%]
             SEQ --> STATE
             VIEW --> STATE
             BTN --> STATE
             
-            STATE --> AE[audio_engine.py<br/>pygame.mixer<br/>Latencia <5ms]
-            STATE --> HW[Subsistema Hardware<br/>Optimizado]
+            STATE --> AE[audio_engine.py<br/>pygame.mixer<br/>Latencia <2ms<br/>Ultra optimizado]
+            STATE --> HW[Subsistema Hardware<br/>Ultra Optimizado]
             
-            AE --> PROC[audio_processor.py<br/>numpy DSP optimizado<br/>Cache inteligente]
-            PROC --> FX[effects_manager.py<br/>Compresor + EQ<br/>Ultra Optimizados]
+            AE --> PROC[audio_processor.py<br/>numpy DSP ultra optimizado<br/>Cache inteligente<br/>Early exit optimizations]
+            PROC --> FX[effects_manager.py<br/>Compresor + EQ<br/>Ultra Optimizados<br/>Frequency control 1000ms]
             
             HW --> GPIO[hardware/<br/>• button_matrix<br/>• led_matrix<br/>• adc_reader<br/>• led_controller]
         end
