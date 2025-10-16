@@ -12,15 +12,24 @@ class EffectsManager:
     def __init__(self, sample_rate=44100):
         self.sample_rate = sample_rate
         
-        # Niveles de efectos (0.0 - 1.0)
-        self.reverb_level = 0.0
-        self.delay_time = 0.0          # 0-1 (mapea a 0-500ms)
+        # Mix de cada efecto (0-100%)
+        self.reverb_mix = 0.0
+        self.delay_mix = 0.0
+        self.compressor_mix = 0.0
+        self.filter_mix = 0.0
+        self.saturation_mix = 0.0
+        
+        # Intensidad general (0-100%)
+        self.intensity = 0.0
+        
+        # Parámetros internos de efectos
+        self.delay_time = 0.3          # 300ms fijo
         self.delay_feedback = 0.3
         self.compressor_threshold = 0.7
         self.compressor_ratio = 2.0
-        self.filter_cutoff = 1.0       # 0-1 (mapea a 200Hz-8kHz)
+        self.filter_cutoff = 0.7       # 7kHz fijo
         self.filter_type = 'lowpass'
-        self.saturation_drive = 0.0    # 0-1
+        self.saturation_drive = 0.5    # Drive fijo
         
         # Buffer para delay
         self.delay_buffer_size = int(0.5 * sample_rate)  # 500ms max
@@ -29,7 +38,7 @@ class EffectsManager:
     
     def process(self, audio_data):
         """
-        Aplicar cadena de efectos al audio
+        Aplicar cadena de efectos al audio con mix e intensidad
         
         Args:
             audio_data: numpy array del audio
@@ -40,27 +49,42 @@ class EffectsManager:
         if audio_data is None or len(audio_data) == 0:
             return audio_data
         
-        processed = audio_data.copy()
+        # Si intensidad es 0, no aplicar efectos
+        if self.intensity <= 0:
+            return audio_data
         
-        # 1. Compressor (primero, para controlar dinámica)
-        if self.compressor_ratio > 1.0:
-            processed = self._apply_compressor(processed)
+        # Calcular factor de intensidad (0-1)
+        intensity_factor = self.intensity / 100.0
         
-        # 2. Saturation (antes de filtros)
-        if self.saturation_drive > 0:
-            processed = self._apply_saturation(processed)
+        # Audio original (dry) y procesado (wet)
+        dry = audio_data.copy()
+        wet = audio_data.copy()
+        
+        # Aplicar efectos solo si tienen mix > 0
+        # 1. Compressor
+        if self.compressor_mix > 0:
+            wet = self._apply_compressor(wet)
+        
+        # 2. Saturation
+        if self.saturation_mix > 0:
+            wet = self._apply_saturation(wet)
         
         # 3. Filter
-        if self.filter_cutoff < 1.0:
-            processed = self._apply_filter(processed)
+        if self.filter_mix > 0:
+            wet = self._apply_filter(wet)
         
-        # 4. Delay (time-based effect)
-        if self.delay_time > 0:
-            processed = self._apply_delay(processed)
+        # 4. Delay
+        if self.delay_mix > 0:
+            wet = self._apply_delay(wet)
         
-        # 5. Reverb (último, para ambiente)
-        if self.reverb_level > 0:
-            processed = self._apply_reverb(processed)
+        # 5. Reverb
+        if self.reverb_mix > 0:
+            wet = self._apply_reverb(wet)
+        
+        # Mix dry/wet con intensidad general
+        # Cada efecto contribuye según su mix individual
+        # Intensidad general controla el balance total
+        processed = dry * (1.0 - intensity_factor) + wet * intensity_factor
         
         return processed
     
@@ -200,22 +224,49 @@ class EffectsManager:
         """Establecer saturación (0.0-1.0)"""
         self.saturation_drive = max(0.0, min(1.0, drive))
     
+    # Métodos para control de mix e intensidad
+    def set_reverb_mix(self, mix):
+        """Establecer mix de reverb (0-100%)"""
+        self.reverb_mix = max(0.0, min(100.0, mix))
+    
+    def set_delay_mix(self, mix):
+        """Establecer mix de delay (0-100%)"""
+        self.delay_mix = max(0.0, min(100.0, mix))
+    
+    def set_compressor_mix(self, mix):
+        """Establecer mix de compressor (0-100%)"""
+        self.compressor_mix = max(0.0, min(100.0, mix))
+    
+    def set_filter_mix(self, mix):
+        """Establecer mix de filter (0-100%)"""
+        self.filter_mix = max(0.0, min(100.0, mix))
+    
+    def set_saturation_mix(self, mix):
+        """Establecer mix de saturation (0-100%)"""
+        self.saturation_mix = max(0.0, min(100.0, mix))
+    
+    def set_intensity(self, intensity):
+        """Establecer intensidad general (0-100%)"""
+        self.intensity = max(0.0, min(100.0, intensity))
+    
     def has_active_effects(self):
         """Verificar si hay algún efecto activo"""
-        return (self.reverb_level > 0.01 or
-                self.delay_time > 0.01 or
-                self.saturation_drive > 0.01 or
-                self.filter_cutoff < 0.99 or
-                self.compressor_ratio > 1.1)
+        return (self.reverb_mix > 1.0 or
+                self.delay_mix > 1.0 or
+                self.saturation_mix > 1.0 or
+                self.filter_mix > 1.0 or
+                self.compressor_mix > 1.0 or
+                self.intensity > 1.0)
     
     def get_status(self):
         """Obtener estado de todos los efectos"""
         return {
-            'reverb': int(self.reverb_level * 100),
-            'delay': int(self.delay_time * 100),
-            'compressor': int((self.compressor_ratio - 1.0) / 9.0 * 100),
-            'filter': int(self.filter_cutoff * 100),
-            'saturation': int(self.saturation_drive * 100)
+            'reverb_mix': int(self.reverb_mix),
+            'delay_mix': int(self.delay_mix),
+            'compressor_mix': int(self.compressor_mix),
+            'filter_mix': int(self.filter_mix),
+            'saturation_mix': int(self.saturation_mix),
+            'intensity': int(self.intensity)
         }
     
     def reset_all(self):

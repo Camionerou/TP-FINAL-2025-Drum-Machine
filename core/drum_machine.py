@@ -244,7 +244,7 @@ class DrumMachine:
                 # Hold 1s: Toggle vista EFFECTS
                 self.effects_view_active = not self.effects_view_active
                 if self.effects_view_active:
-                    print("🎛️ Vista EFFECTS activada - Usa Pots 0-4")
+                    print("🎛️ Vista EFFECTS activada - Pots 0-4: Mix efectos, Pot 5: Intensidad")
                     self._show_effects_view()
                 else:
                     print("Vista EFFECTS desactivada")
@@ -511,11 +511,16 @@ class DrumMachine:
         if self.effects_view_active and hasattr(self.audio_engine.processor, 'effects'):
             effects = self.audio_engine.processor.effects
             if effects:
-                effects.set_reverb(values[0])
-                effects.set_delay(values[1])
-                effects.set_compressor(ratio=1.0 + values[2] * 9.0)
-                effects.set_filter(values[3])
-                effects.set_saturation(values[4])
+                # Pots 0-4: Mix de cada efecto (0-100%)
+                effects.set_reverb_mix(values[0] * 100)
+                effects.set_delay_mix(values[1] * 100)
+                effects.set_compressor_mix(values[2] * 100)
+                effects.set_filter_mix(values[3] * 100)
+                effects.set_saturation_mix(values[4] * 100)
+                
+                # Pot 5: Intensidad general (0-100%)
+                effects.set_intensity(values[5] * 100)
+                
                 self._show_effects_view()
             return  # No procesar pots normales en modo effects
         
