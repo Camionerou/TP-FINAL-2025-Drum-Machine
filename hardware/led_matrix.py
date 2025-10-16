@@ -505,32 +505,23 @@ class LEDMatrix:
     
     def draw_effect_view(self, effect_name, effect_value):
         """
-        Vista individual de efecto: Similar a las vistas de volumen
-        
-        Layout:
-        - Fila 0: Nombre del efecto + número (ej: "REV 75")
-        - Fila 1: Barra horizontal de nivel
+        Vista individual de efecto: Igual que las vistas de volumen
+        Formato: REV 75 (o DEL/COM/FIL/SAT/INT)
         
         Args:
-            effect_name: Nombre del efecto (REV, DEL, COM, FIL, SAT)
+            effect_name: Nombre del efecto (REV, DEL, COM, FIL, SAT, INT)
             effect_value: Valor del efecto (0-100)
         """
         self.clear()
         
-        # Título del efecto + valor
-        # Dibujar nombre del efecto (ej: "REV")
-        self._draw_text(effect_name, 0, 0)
+        # Convertir a entero
+        value_int = int(effect_value)
         
-        # Dibujar valor numérico (ej: "75")
-        value_text = f"{int(effect_value)}"
-        value_x = len(effect_name) * 4 + 1  # Espacio después del nombre
-        self._draw_text(value_text, value_x, 0)
+        # Label: 3 letras = 11px, espacio = 2px, número 2-3 dígitos = 9-13px, total ~22-26px
+        # Centrado: X=3 (para 3 dígitos) o X=5 (para 2 dígitos)
         
-        # Barra horizontal de nivel (fila 1, cols 0-31)
-        bar_width = int((effect_value / 100.0) * 32)
-        
-        for col in range(bar_width):
-            self.set_pixel(1, col, True)
+        self._draw_text(effect_name, 4, 2)
+        self._draw_number(value_int, 17, 2)
         
         self.update()
     

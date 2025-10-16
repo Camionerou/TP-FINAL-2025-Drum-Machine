@@ -528,8 +528,11 @@ class DrumMachine:
                 changes = np.abs(values_array - self._last_effects_values)
                 max_change_idx = np.argmax(changes)
                 
-                # Solo mostrar vista si hay cambio significativo (>5%)
-                if changes[max_change_idx] > 0.05:
+                # Mostrar vista si hay cambio significativo (>2%) o si es la primera vez
+                first_time = not hasattr(self, '_effects_view_shown')
+                if changes[max_change_idx] > 0.02 or first_time:
+                    self._effects_view_shown = True
+                    
                     if max_change_idx == 0:  # Pot 0: Reverb
                         reverb_mix = values[0] * 100
                         effects.set_reverb_mix(reverb_mix)
