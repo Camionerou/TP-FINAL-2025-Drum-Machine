@@ -249,6 +249,10 @@ class EffectsManager:
         """Establecer intensidad general (0-100%)"""
         self.intensity = max(0.0, min(100.0, intensity))
     
+    def get_intensity(self):
+        """Obtener intensidad general actual"""
+        return self.intensity
+    
     def has_active_effects(self):
         """Verificar si hay algún efecto activo"""
         return (self.reverb_mix > 1.0 or

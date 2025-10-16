@@ -5,6 +5,7 @@ Integra todos los componentes con UI mejorada y controles inteligentes
 
 import time
 import sys
+import numpy as np
 from .config import (
     MODE_PAD, MODE_SEQUENCER,
     BTN_PLAY_STOP, BTN_MODE, BTN_PATTERN_PREV, BTN_PATTERN_NEXT,
@@ -498,10 +499,15 @@ class DrumMachine:
     # ===== EFECTOS =====
     
     def _show_effects_view(self):
-        """Mostrar vista de efectos con estado actual"""
+        """Mostrar vista de efectos inicial (intensidad general)"""
         if hasattr(self.audio_engine.processor, 'effects') and self.audio_engine.processor.effects:
-            effects_status = self.audio_engine.processor.effects.get_status()
-            self.view_manager.show_view(ViewType.EFFECTS, {'effects': effects_status}, duration=None)
+            effects = self.audio_engine.processor.effects
+            intensity = effects.get_intensity()
+            self.view_manager.show_view(
+                ViewType.EFFECT_INTENSITY, 
+                {'intensity': intensity}, 
+                duration=None
+            )
     
     # ===== LECTURA DE POTENCIÓMETROS =====
     
@@ -513,53 +519,61 @@ class DrumMachine:
         if self.effects_view_active and hasattr(self.audio_engine.processor, 'effects'):
             effects = self.audio_engine.processor.effects
             if effects:
-                # Pot 0: Reverb Mix
-                reverb_mix = values[0] * 100
-                effects.set_reverb_mix(reverb_mix)
-                self.view_manager.show_view(
-                    ViewType.EFFECT_REVERB,
-                    {'reverb_mix': reverb_mix}
-                )
+                # Detectar qué pot cambió más significativamente
+                if not hasattr(self, '_last_effects_values'):
+                    self._last_effects_values = values.copy()
                 
-                # Pot 1: Delay Mix
-                delay_mix = values[1] * 100
-                effects.set_delay_mix(delay_mix)
-                self.view_manager.show_view(
-                    ViewType.EFFECT_DELAY,
-                    {'delay_mix': delay_mix}
-                )
+                # Calcular cambios
+                changes = np.abs(values - self._last_effects_values)
+                max_change_idx = np.argmax(changes)
                 
-                # Pot 2: Compressor Mix
-                compressor_mix = values[2] * 100
-                effects.set_compressor_mix(compressor_mix)
-                self.view_manager.show_view(
-                    ViewType.EFFECT_COMPRESSOR,
-                    {'compressor_mix': compressor_mix}
-                )
+                # Solo mostrar vista si hay cambio significativo (>5%)
+                if changes[max_change_idx] > 0.05:
+                    if max_change_idx == 0:  # Pot 0: Reverb
+                        reverb_mix = values[0] * 100
+                        effects.set_reverb_mix(reverb_mix)
+                        self.view_manager.show_view(
+                            ViewType.EFFECT_REVERB,
+                            {'reverb_mix': reverb_mix}
+                        )
+                    elif max_change_idx == 1:  # Pot 1: Delay
+                        delay_mix = values[1] * 100
+                        effects.set_delay_mix(delay_mix)
+                        self.view_manager.show_view(
+                            ViewType.EFFECT_DELAY,
+                            {'delay_mix': delay_mix}
+                        )
+                    elif max_change_idx == 2:  # Pot 2: Compressor
+                        compressor_mix = values[2] * 100
+                        effects.set_compressor_mix(compressor_mix)
+                        self.view_manager.show_view(
+                            ViewType.EFFECT_COMPRESSOR,
+                            {'compressor_mix': compressor_mix}
+                        )
+                    elif max_change_idx == 3:  # Pot 3: Filter
+                        filter_mix = values[3] * 100
+                        effects.set_filter_mix(filter_mix)
+                        self.view_manager.show_view(
+                            ViewType.EFFECT_FILTER,
+                            {'filter_mix': filter_mix}
+                        )
+                    elif max_change_idx == 4:  # Pot 4: Saturation
+                        saturation_mix = values[4] * 100
+                        effects.set_saturation_mix(saturation_mix)
+                        self.view_manager.show_view(
+                            ViewType.EFFECT_SATURATION,
+                            {'saturation_mix': saturation_mix}
+                        )
+                    elif max_change_idx == 5:  # Pot 5: Intensidad
+                        intensity = values[5] * 100
+                        effects.set_intensity(intensity)
+                        self.view_manager.show_view(
+                            ViewType.EFFECT_INTENSITY,
+                            {'intensity': intensity}
+                        )
                 
-                # Pot 3: Filter Mix
-                filter_mix = values[3] * 100
-                effects.set_filter_mix(filter_mix)
-                self.view_manager.show_view(
-                    ViewType.EFFECT_FILTER,
-                    {'filter_mix': filter_mix}
-                )
-                
-                # Pot 4: Saturation Mix
-                saturation_mix = values[4] * 100
-                effects.set_saturation_mix(saturation_mix)
-                self.view_manager.show_view(
-                    ViewType.EFFECT_SATURATION,
-                    {'saturation_mix': saturation_mix}
-                )
-                
-                # Pot 5: Intensidad general
-                intensity = values[5] * 100
-                effects.set_intensity(intensity)
-                self.view_manager.show_view(
-                    ViewType.EFFECT_INTENSITY,
-                    {'intensity': intensity}
-                )
+                # Actualizar valores de referencia
+                self._last_effects_values = values.copy()
             return  # No procesar pots normales en modo effects
         
         # POT_SCROLL (0): Seleccionar paso (0-31)
