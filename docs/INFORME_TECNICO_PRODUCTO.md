@@ -275,11 +275,11 @@ numpy==1.24.3          # Procesamiento DSP
 
 | Pot | Efecto | Vista | Descripción |
 |-----|--------|-------|-------------|
-| 0 | Reverb | REV XX | Mix de ambiente (sala/plate/hall) |
-| 1 | Delay | DEL XX | Mix de echo con feedback |
-| 2 | Compressor | COM XX | Mix de compresión dinámica |
-| 3 | Filter | FIL XX | Mix de filtro low-pass |
-| 4 | Saturation | SAT XX | Mix de distorsión armónica |
+| 0 | Reverb | REV XX | Ambiente simple (delay 30ms + feedback) |
+| 1 | Delay | DEL XX | Echo simple (delay variable + feedback bajo) |
+| 2 | Compressor | COM XX | Compresión de picos (threshold + ratio) |
+| 3 | Filter | FIL XX | Filtro low-pass de un polo (200Hz-8kHz) |
+| 4 | Saturation | SAT XX | Saturación tanh (drive 1.0-3.0) |
 | 5 | Intensidad | INT XX | Intensidad general (0=sin efectos, 100=full wet) |
 
 **Botones:**
