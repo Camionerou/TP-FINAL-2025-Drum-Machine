@@ -175,54 +175,11 @@ class EffectsManager:
                 reverb_signal += delayed * decay
         
         # Mix dry/wet
-        wet = self.reverb_level
+        wet = self.reverb_mix / 100.0
         dry = 1.0 - wet * 0.5  # No reducir tanto el dry
         
         return audio * dry + reverb_signal * wet
     
-    def set_reverb(self, level):
-        """Establecer nivel de reverb (0.0-1.0)"""
-        self.reverb_level = max(0.0, min(1.0, level))
-    
-    def set_delay(self, time, feedback=None):
-        """
-        Establecer delay
-        
-        Args:
-            time: Tiempo de delay (0.0-1.0)
-            feedback: Feedback (0.0-0.9), None mantiene actual
-        """
-        self.delay_time = max(0.0, min(1.0, time))
-        if feedback is not None:
-            self.delay_feedback = max(0.0, min(0.9, feedback))
-    
-    def set_compressor(self, threshold=None, ratio=None):
-        """
-        Configurar compresor
-        
-        Args:
-            threshold: Umbral (0.0-1.0)
-            ratio: Ratio de compresión (1.0-10.0)
-        """
-        if threshold is not None:
-            self.compressor_threshold = max(0.0, min(1.0, threshold))
-        if ratio is not None:
-            self.compressor_ratio = max(1.0, min(10.0, ratio))
-    
-    def set_filter(self, cutoff, filter_type='lowpass'):
-        """
-        Configurar filtro
-        
-        Args:
-            cutoff: Frecuencia de corte (0.0-1.0)
-            filter_type: 'lowpass' o 'highpass'
-        """
-        self.filter_cutoff = max(0.0, min(1.0, cutoff))
-        self.filter_type = filter_type
-    
-    def set_saturation(self, drive):
-        """Establecer saturación (0.0-1.0)"""
-        self.saturation_drive = max(0.0, min(1.0, drive))
     
     # Métodos para control de mix e intensidad
     def set_reverb_mix(self, mix):
@@ -275,10 +232,12 @@ class EffectsManager:
     
     def reset_all(self):
         """Resetear todos los efectos a 0"""
-        self.reverb_level = 0.0
-        self.delay_time = 0.0
-        self.filter_cutoff = 1.0
-        self.saturation_drive = 0.0
+        self.reverb_mix = 0.0
+        self.delay_mix = 0.0
+        self.compressor_mix = 0.0
+        self.filter_mix = 0.0
+        self.saturation_mix = 0.0
+        self.intensity = 0.0
         self.compressor_ratio = 1.0
         self.delay_buffer.fill(0)
 
