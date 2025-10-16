@@ -273,14 +273,14 @@ numpy==1.24.3          # Procesamiento DSP
 
 **Modo EFFECTS (Hold BTN 12):**
 
-| Pot | Control | Rango | Descripción |
-|-----|---------|-------|-------------|
-| 0 | Reverb Mix | 0-100% | Mix de ambiente (sala/plate/hall) |
-| 1 | Delay Mix | 0-100% | Mix de echo con feedback |
-| 2 | Compressor Mix | 0-100% | Mix de compresión dinámica |
-| 3 | Filter Mix | 0-100% | Mix de filtro low-pass |
-| 4 | Saturation Mix | 0-100% | Mix de distorsión armónica |
-| 5 | Intensidad | 0-100% | Intensidad general (0=sin efectos, 100=full wet) |
+| Pot | Efecto | Vista | Descripción |
+|-----|--------|-------|-------------|
+| 0 | Reverb | REV XX | Mix de ambiente (sala/plate/hall) |
+| 1 | Delay | DEL XX | Mix de echo con feedback |
+| 2 | Compressor | COM XX | Mix de compresión dinámica |
+| 3 | Filter | FIL XX | Mix de filtro low-pass |
+| 4 | Saturation | SAT XX | Mix de distorsión armónica |
+| 5 | Intensidad | INT XX | Intensidad general (0=sin efectos, 100=full wet) |
 
 **Botones:**
 
@@ -323,7 +323,7 @@ numpy==1.24.3          # Procesamiento DSP
 | **VOL_CYMS** | Pot 7 | 1s | "C" + número + barra |
 | **PATTERN** | BTN 10/11 | 1.5s | Número grande del patrón |
 | **SAVE** | BTN 13 | 1.5s | Animación + checkmark |
-| **EFFECTS** | Hold BTN 12 | Permanente | Título + 5 barras mix + barra intensidad |
+| **EFFECTS** | Hold BTN 12 | Permanente | Vistas individuales: REV/DEL/COM/FIL/SAT/INT XX |
 
 ---
 

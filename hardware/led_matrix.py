@@ -503,63 +503,29 @@ class LEDMatrix:
         
         self.update()
     
-    def draw_effects_view(self, effects_status):
+    def draw_effect_view(self, effect_name, effect_value):
         """
-        Vista EFFECTS: Diseño claro y comprensible
+        Vista individual de efecto: Similar a las vistas de volumen
         
         Layout:
-        - Fila 0: "FX" + intensidad (ej: "FX 60")
-        - Fila 1: Separador horizontal
-        - Fila 2: Letras R D C F S
-        - Fila 3: Barras verticales gruesas (altura 4)
-        - Fila 7: Barra horizontal de intensidad
+        - Fila 0: Nombre del efecto + número (ej: "REV 75")
+        - Fila 1: Barra horizontal de nivel
         
         Args:
-            effects_status: Dict con mix (0-100) e intensidad (0-100)
+            effect_name: Nombre del efecto (REV, DEL, COM, FIL, SAT)
+            effect_value: Valor del efecto (0-100)
         """
         self.clear()
         
-        # Título "FX" + intensidad
-        intensity = effects_status.get('intensity', 0)
-        self._draw_text("FX", 0, 0)
-        self._draw_text(f"{int(intensity)}", 8, 0)
+        # Título del efecto + valor
+        self._draw_text(effect_name, 0, 0)
+        self._draw_text(f"{int(effect_value)}", 16, 0)
         
-        # Separador horizontal (fila 1)
-        for col in range(32):
+        # Barra horizontal de nivel (fila 1, cols 0-31)
+        bar_width = int((effect_value / 100.0) * 32)
+        
+        for col in range(bar_width):
             self.set_pixel(1, col, True)
-        
-        # 5 efectos: R D C F S
-        effect_names = ['R', 'D', 'C', 'F', 'S']
-        effect_keys = ['reverb', 'delay', 'compressor', 'filter', 'saturation']
-        
-        # Posiciones: 0, 4, 8, 12, 16 (cada letra ocupa 4 cols)
-        positions = [0, 4, 8, 12, 16]
-        
-        for idx, (name, key, pos) in enumerate(zip(effect_names, effect_keys, positions)):
-            # Mix del efecto (0-100)
-            mix_level = effects_status.get(f'{key}_mix', 0)
-            
-            # Letra del efecto (fila 2)
-            self._draw_text(name, pos, 2)
-            
-            # Barra vertical gruesa (filas 3-6, altura 4, ancho 3)
-            bar_height = int((mix_level / 100.0) * 4)
-            
-            for row in range(4):
-                pixel_on = (3 - row) < bar_height
-                # Barra gruesa de 3 píxeles de ancho
-                for col_offset in range(3):
-                    self.set_pixel(row + 3, pos + col_offset, pixel_on)
-            
-            # Indicador de nivel alto (punto en esquina)
-            if mix_level > 80:
-                self.set_pixel(2, pos + 3, True)
-        
-        # Barra de intensidad general (fila 7, cols 0-31)
-        intensity_width = int((intensity / 100.0) * 32)
-        
-        for col in range(intensity_width):
-            self.set_pixel(7, col, True)
         
         self.update()
     

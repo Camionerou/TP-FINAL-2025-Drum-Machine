@@ -244,7 +244,9 @@ class DrumMachine:
                 # Hold 1s: Toggle vista EFFECTS
                 self.effects_view_active = not self.effects_view_active
                 if self.effects_view_active:
-                    print("🎛️ Vista EFFECTS activada - Pots 0-4: Mix efectos, Pot 5: Intensidad")
+                    print("🎛️ Modo EFFECTS activado - Pots 0-5: Efectos individuales")
+                    print("  Pot 0: Reverb, Pot 1: Delay, Pot 2: Compressor")
+                    print("  Pot 3: Filter, Pot 4: Saturation, Pot 5: Intensidad")
                     self._show_effects_view()
                 else:
                     print("Vista EFFECTS desactivada")
@@ -507,21 +509,57 @@ class DrumMachine:
         """Leer y procesar potenciómetros con detección de cambios"""
         values = self.adc_reader.read_all_channels()
         
-        # Modo EFFECTS: Pots controlan efectos
+        # Modo EFFECTS: Pots controlan efectos individuales
         if self.effects_view_active and hasattr(self.audio_engine.processor, 'effects'):
             effects = self.audio_engine.processor.effects
             if effects:
-                # Pots 0-4: Mix de cada efecto (0-100%)
-                effects.set_reverb_mix(values[0] * 100)
-                effects.set_delay_mix(values[1] * 100)
-                effects.set_compressor_mix(values[2] * 100)
-                effects.set_filter_mix(values[3] * 100)
-                effects.set_saturation_mix(values[4] * 100)
+                # Pot 0: Reverb Mix
+                reverb_mix = values[0] * 100
+                effects.set_reverb_mix(reverb_mix)
+                self.view_manager.show_view(
+                    ViewType.EFFECT_REVERB,
+                    {'reverb_mix': reverb_mix}
+                )
                 
-                # Pot 5: Intensidad general (0-100%)
-                effects.set_intensity(values[5] * 100)
+                # Pot 1: Delay Mix
+                delay_mix = values[1] * 100
+                effects.set_delay_mix(delay_mix)
+                self.view_manager.show_view(
+                    ViewType.EFFECT_DELAY,
+                    {'delay_mix': delay_mix}
+                )
                 
-                self._show_effects_view()
+                # Pot 2: Compressor Mix
+                compressor_mix = values[2] * 100
+                effects.set_compressor_mix(compressor_mix)
+                self.view_manager.show_view(
+                    ViewType.EFFECT_COMPRESSOR,
+                    {'compressor_mix': compressor_mix}
+                )
+                
+                # Pot 3: Filter Mix
+                filter_mix = values[3] * 100
+                effects.set_filter_mix(filter_mix)
+                self.view_manager.show_view(
+                    ViewType.EFFECT_FILTER,
+                    {'filter_mix': filter_mix}
+                )
+                
+                # Pot 4: Saturation Mix
+                saturation_mix = values[4] * 100
+                effects.set_saturation_mix(saturation_mix)
+                self.view_manager.show_view(
+                    ViewType.EFFECT_SATURATION,
+                    {'saturation_mix': saturation_mix}
+                )
+                
+                # Pot 5: Intensidad general
+                intensity = values[5] * 100
+                effects.set_intensity(intensity)
+                self.view_manager.show_view(
+                    ViewType.EFFECT_INTENSITY,
+                    {'intensity': intensity}
+                )
             return  # No procesar pots normales en modo effects
         
         # POT_SCROLL (0): Seleccionar paso (0-31)
