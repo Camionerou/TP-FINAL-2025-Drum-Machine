@@ -17,11 +17,29 @@ except (ImportError, RuntimeError):
         HIGH = 1
         LOW = 0
         
+        def __init__(self):
+            self._mock_pressed_buttons = set()
+            self._mock_press_time = 0
+        
         def setmode(self, mode): pass
         def setup(self, pin, mode, pull_up_down=None): pass
-        def input(self, pin): return self.HIGH
+        def input(self, pin): 
+            # Simular botón presionado si está en el mock
+            return self.LOW if pin in self._mock_pressed_buttons else self.HIGH
         def output(self, pin, state): pass
         def cleanup(self): pass
+        
+        def mock_press_button(self, button_id):
+            """Simular presión de botón para testing"""
+            self._mock_pressed_buttons.add(button_id)
+        
+        def mock_release_button(self, button_id):
+            """Simular liberación de botón para testing"""
+            self._mock_pressed_buttons.discard(button_id)
+        
+        def mock_release_all(self):
+            """Simular liberación de todos los botones"""
+            self._mock_pressed_buttons.clear()
     
     GPIO = MockGPIO()
 
@@ -92,17 +110,19 @@ class ButtonMatrix:
                         self.button_states[row_idx][col_idx] = True
                         self.last_press_time[row_idx][col_idx] = current_time
                         
-                        # Calcular ID del botón (0-15)
-                        button_id = row_idx * len(self.cols) + col_idx
-                        pressed_buttons.append(button_id)
-                        
                         # Llamar callback si existe
                         if self.on_button_press:
+                            button_id = row_idx * len(self.cols) + col_idx
                             self.on_button_press(button_id)
                 
                 elif not pressed:
                     # Botón liberado
                     self.button_states[row_idx][col_idx] = False
+                
+                # Agregar a lista si está presionado (para hold detection)
+                if self.button_states[row_idx][col_idx]:
+                    button_id = row_idx * len(self.cols) + col_idx
+                    pressed_buttons.append(button_id)
             
             # Desactivar fila (HIGH)
             GPIO.output(row_pin, GPIO.HIGH)
