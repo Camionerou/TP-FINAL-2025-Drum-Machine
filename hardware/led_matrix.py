@@ -522,7 +522,7 @@ class LEDMatrix:
             level = effects_status.get(key, 0)
             
             # Letra del efecto (fila 0)
-            self._draw_letter(name, 0, x_start + 2)
+            self._draw_text(name, x_start + 2, 0)
             
             # Barra vertical (8 filas de altura)
             bar_height = int((level / 100.0) * 6)  # Máximo 6 filas (2-7)
