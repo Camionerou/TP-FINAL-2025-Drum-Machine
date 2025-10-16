@@ -15,7 +15,7 @@ except ImportError:
         def close(self): pass
     spidev = type('spidev', (), {'SpiDev': MockSpiDev})()
 
-from config import SPI_MCP3008_CE, ADC_MAX_VALUE, ADC_THRESHOLD, ADC_MIN_VALID_VALUE
+from core.config import SPI_MCP3008_CE, ADC_MAX_VALUE, ADC_THRESHOLD, ADC_MIN_VALID_VALUE
 
 
 class ADCReader:

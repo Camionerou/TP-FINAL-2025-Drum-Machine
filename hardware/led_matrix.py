@@ -14,7 +14,7 @@ except ImportError:
         def close(self): pass
     spidev = type('spidev', (), {'SpiDev': MockSpiDev})()
 
-from config import SPI_MAX7219_CE, MAX7219_NUM_DEVICES, MAX7219_BRIGHTNESS
+from core.config import SPI_MAX7219_CE, MAX7219_NUM_DEVICES, MAX7219_BRIGHTNESS
 
 
 # Registros MAX7219

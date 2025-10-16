@@ -15,9 +15,9 @@ print()
 # Test 1: Importar módulos
 print("[1/6] Probando importación de módulos...")
 try:
-    from config import *
-    from audio_engine import AudioEngine
-    from sequencer import Sequencer
+    from core.config import *
+    from core.audio_engine import AudioEngine
+    from core.sequencer import Sequencer
     from hardware import ButtonMatrix, LEDMatrix, ADCReader, LEDController
     print("✓ Todos los módulos importados correctamente")
 except Exception as e:

@@ -25,7 +25,7 @@ except (ImportError, RuntimeError):
     
     GPIO = MockGPIO()
 
-from config import BUTTON_ROWS, BUTTON_COLS, DEBOUNCE_TIME
+from core.config import BUTTON_ROWS, BUTTON_COLS, DEBOUNCE_TIME
 
 
 class ButtonMatrix:

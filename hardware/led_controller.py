@@ -22,7 +22,7 @@ except (ImportError, RuntimeError):
     
     GPIO = MockGPIO()
 
-from config import LED_RED, LED_GREEN, LED_YELLOW, LED_BLUE, LED_WHITE
+from core.config import LED_RED, LED_GREEN, LED_YELLOW, LED_BLUE, LED_WHITE
 
 
 class LEDController:
