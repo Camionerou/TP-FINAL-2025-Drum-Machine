@@ -27,17 +27,13 @@ class EffectsManager:
         
         # Control de frecuencia de procesamiento ultra optimizado
         self.last_process_time = 0
-        self.process_interval = 0.2  # 200ms para reducir carga
+        self.process_interval = 0.5  # 500ms para reducir carga significativamente
         self.skip_count = 0
-        self.max_skip = 3  # Procesar cada 3 samples máximo
+        self.max_skip = 5  # Procesar cada 5 samples máximo
         
         # Cache simple para evitar reprocesamiento
         self.last_cache_time = 0
-        self.cache_duration = 0.1  # Cache por 100ms
-        
-        # Buffers optimizados para reverb
-        self.reverb_buffer = np.zeros(int(0.1 * sample_rate))  # Buffer más pequeño
-        self.reverb_pos = 0
+        self.cache_duration = 0.2  # Cache por 200ms
         
         # Estado de procesamiento
         self.processing_enabled = True
@@ -101,7 +97,7 @@ class EffectsManager:
         self.last_process_time = current_time
         
         # Si intensidad es muy baja, no aplicar efectos
-        if self.intensity <= 10:
+        if self.intensity <= 20:  # Umbral más alto para reducir procesamiento
             return audio_data
         
         # Verificar cache simple basado en tiempo
@@ -112,7 +108,7 @@ class EffectsManager:
         # Solo procesar si hay efectos activos significativos
         total_mix = (self.compressor_mix + self.eq_mix) / 100.0
         
-        if total_mix < 0.2:  # Threshold más alto
+        if total_mix < 0.3:  # Threshold mucho más alto para reducir procesamiento
             return audio_data
         
         # Preservar dimensiones originales del audio
@@ -122,11 +118,11 @@ class EffectsManager:
         dry = audio_data.copy()
         wet = audio_data.copy()
         
-        # Aplicar efectos (umbrales más bajos para mejor audibilidad)
-        if self.compressor_mix > 5:  # Umbral más bajo
+        # Aplicar efectos (umbrales más altos para reducir procesamiento)
+        if self.compressor_mix > 30:  # Umbral más alto para reducir procesamiento
             wet = self._apply_compressor_fast(wet)
         
-        if self.eq_mix > 5:  # Umbral más bajo
+        if self.eq_mix > 30:  # Umbral más alto para reducir procesamiento
             wet = self._apply_eq_fast(wet)
         
         # Mix dry/wet con intensidad general
@@ -193,7 +189,7 @@ class EffectsManager:
         return processed_flat.reshape(original_shape)
     
     def _apply_eq_fast(self, audio):
-        """EQ simple y ultra rápido para drums"""
+        """EQ ultra simple y rápido para drums"""
         # Preservar dimensiones originales
         original_shape = audio.shape
         
@@ -203,26 +199,21 @@ class EffectsManager:
         else:
             audio_flat = audio
         
-        # EQ simple: boost de graves y agudos para drums
-        # Filtro pasa-bajos para graves (boost)
-        alpha_low = 0.3  # Factor de suavizado para graves
-        low_filtered = np.zeros_like(audio_flat)
-        if len(audio_flat) > 0:
-            low_filtered[0] = audio_flat[0]
-            for i in range(1, len(audio_flat)):
-                low_filtered[i] = alpha_low * audio_flat[i] + (1 - alpha_low) * low_filtered[i-1]
+        # EQ ultra simple: solo boost de graves y agudos
+        # Boost de graves (frecuencias bajas)
+        bass_boost = 0.4  # Factor de boost para graves
+        bass_enhanced = audio_flat * (1.0 + bass_boost)
         
-        # Filtro pasa-altos para agudos (boost)
-        alpha_high = 0.7  # Factor de suavizado para agudos
-        high_filtered = np.zeros_like(audio_flat)
-        if len(audio_flat) > 0:
-            high_filtered[0] = audio_flat[0]
-            for i in range(1, len(audio_flat)):
-                high_filtered[i] = alpha_high * audio_flat[i] + (1 - alpha_high) * high_filtered[i-1]
+        # Boost de agudos (frecuencias altas) - simulado con diferenciación
+        if len(audio_flat) > 1:
+            treble_boost = 0.3  # Factor de boost para agudos
+            treble_enhanced = np.diff(audio_flat, prepend=audio_flat[0]) * treble_boost
+            processed_audio = bass_enhanced + treble_enhanced
+        else:
+            processed_audio = bass_enhanced
         
-        # Combinar EQ
-        eq_boost = 0.3  # Boost de EQ
-        processed_audio = audio_flat + (low_filtered + high_filtered) * eq_boost
+        # Limitar para evitar clipping
+        processed_audio = np.clip(processed_audio, -1.0, 1.0)
         
         # Mix con el original
         wet = self.eq_mix / 100.0
