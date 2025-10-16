@@ -518,8 +518,13 @@ class LEDMatrix:
         self.clear()
         
         # Título del efecto + valor
+        # Dibujar nombre del efecto (ej: "REV")
         self._draw_text(effect_name, 0, 0)
-        self._draw_text(f"{int(effect_value)}", 16, 0)
+        
+        # Dibujar valor numérico (ej: "75")
+        value_text = f"{int(effect_value)}"
+        value_x = len(effect_name) * 4 + 1  # Espacio después del nombre
+        self._draw_text(value_text, value_x, 0)
         
         # Barra horizontal de nivel (fila 1, cols 0-31)
         bar_width = int((effect_value / 100.0) * 32)
