@@ -79,8 +79,8 @@ class AudioProcessor:
     
     def process_sample(self, sound, volume, gain=1.0):
         """
-        Procesar un sample antes de reproducirlo
-        Aplica volumen, ganancia y limitador
+        Procesar un sample antes de reproducirlo (ultra optimizado)
+        Aplica volumen, ganancia, limitador y efectos
         
         Args:
             sound: pygame.mixer.Sound object
@@ -90,54 +90,66 @@ class AudioProcessor:
         Returns:
             Sound procesado listo para reproducir
         """
+        # Calcular ganancia total
+        total_gain = volume * gain * self.master_gain
+        
+        # Si la ganancia es muy baja, usar método simple
+        if total_gain < 0.01:
+            sound.set_volume(min(1.0, total_gain))
+            return sound
+        
+        # Si no hay efectos activos, usar procesamiento simple
+        if not self.effects or not self.effects.has_active_effects():
+            sound.set_volume(min(1.0, total_gain))
+            return sound
+        
         # Obtener datos del sample como array numpy
         try:
             sound_array = pygame.sndarray.array(sound)
             
-            # Convertir a float normalizado (-1.0 a 1.0) - optimizado
+            # Verificar tamaño del sample para evitar procesar samples muy largos
+            if len(sound_array) > 44100:  # Más de 1 segundo
+                sound.set_volume(min(1.0, total_gain))
+                return sound
+            
+            # Convertir a float normalizado (-1.0 a 1.0) - ultra optimizado
             if sound_array.dtype == np.int16:
                 audio_float = sound_array.astype(np.float32) * (1.0 / 32768.0)
             elif sound_array.dtype == np.uint8:
                 audio_float = (sound_array.astype(np.float32) - 128.0) * (1.0 / 128.0)
             else:
-                # Si no podemos procesar, usar método simple
-                sound.set_volume(min(1.0, volume * gain * self.master_gain))
+                # Fallback simple
+                sound.set_volume(min(1.0, total_gain))
                 return sound
             
             # Aplicar volumen y ganancia
-            processed = self.apply_gain(audio_float, volume * gain * self.master_gain)
+            processed = audio_float * total_gain
             
-            # Aplicar limitador si está habilitado
+            # Aplicar limitador optimizado
             if self.limiter_enabled:
-                processed = self.soft_limiter(processed, self.limiter_threshold)
+                processed = np.clip(processed, -self.limiter_threshold, self.limiter_threshold)
             else:
-                processed = self.hard_limiter(processed, 1.0)
+                processed = np.clip(processed, -1.0, 1.0)
             
             # Aplicar efectos master si están disponibles y activos
             if self.effects and self.effects.has_active_effects():
                 processed = self.effects.process(processed)
             
-            # Convertir de vuelta a formato original - optimizado
+            # Convertir de vuelta a formato original - ultra optimizado
             if sound_array.dtype == np.int16:
                 processed_int = (processed * 32767.0).astype(np.int16)
             else:
                 processed_int = (processed * 128.0 + 128.0).astype(np.uint8)
             
             # Crear nuevo Sound con audio procesado
-            # Manejar mono y stereo
-            if len(processed_int.shape) == 1:
-                # Mono
-                processed_sound = pygame.sndarray.make_sound(processed_int)
-            else:
-                # Stereo
-                processed_sound = pygame.sndarray.make_sound(processed_int)
+            processed_sound = pygame.sndarray.make_sound(processed_int)
             
             return processed_sound
             
         except Exception as e:
             # Si falla el procesamiento, usar método simple
             print(f"Advertencia: Procesamiento avanzado falló ({e}), usando método simple")
-            sound.set_volume(min(1.0, volume * gain * self.master_gain))
+            sound.set_volume(min(1.0, total_gain))
             return sound
     
     def set_master_gain(self, gain):

@@ -82,13 +82,13 @@ class ViewManager:
     
     def update(self):
         """
-        Actualizar el estado del gestor de vistas
+        Actualizar el estado del gestor de vistas (optimizado)
         Maneja timeouts y vuelve a vista principal si es necesario
         """
         current_time = time.time()
         
-        # Actualizar frame de animación cada 100ms
-        if current_time - self.last_animation_update > 0.1:
+        # Actualizar frame de animación cada 200ms (reducir frecuencia)
+        if current_time - self.last_animation_update > 0.2:
             self.animation_frame += 1
             self.last_animation_update = current_time
         
@@ -98,7 +98,7 @@ class ViewManager:
             if elapsed >= self.view_duration:
                 self.return_to_sequencer()
         
-        # Timer de inactividad (solo si estamos en SEQUENCER)
+        # Timer de inactividad (solo si estamos en SEQUENCER) - menos frecuente
         if self.current_view == ViewType.SEQUENCER:
             inactive_time = current_time - self.last_interaction_time
             if inactive_time >= self.inactivity_timeout:

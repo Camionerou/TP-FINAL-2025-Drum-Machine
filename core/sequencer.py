@@ -97,7 +97,7 @@ class Sequencer:
     
     def _calculate_step_delay(self, step):
         """
-        Calcular delay para un paso con swing
+        Calcular delay para un paso con swing (optimizado)
         
         Args:
             step: Número de paso
@@ -105,20 +105,24 @@ class Sequencer:
         Returns:
             Delay en segundos
         """
-        # Tiempo base de un paso (16th note)
-        base_delay = 60.0 / self.bpm / 4  # 4 pasos por beat
+        # Tiempo base de un paso (16th note) - cacheado
+        if not hasattr(self, '_base_delay') or self._last_bpm != self.bpm:
+            self._base_delay = 60.0 / self.bpm / 4  # 4 pasos por beat
+            self._last_bpm = self.bpm
         
-        # Aplicar swing a pasos impares
-        if step % 2 == 1 and self.swing > 0:
+        # Si no hay swing, usar delay base
+        if self.swing == 0:
+            return self._base_delay
+        
+        # Aplicar swing a pasos impares (optimizado)
+        if step % 2 == 1:
             # El swing retrasa los pasos impares
             swing_factor = 1.0 + (self.swing / 100.0)
-            return base_delay * swing_factor
-        elif step % 2 == 0 and self.swing > 0:
+            return self._base_delay * swing_factor
+        else:
             # Compensar los pasos pares para mantener el tempo general
             swing_factor = 1.0 - (self.swing / 200.0)
-            return base_delay * swing_factor
-        
-        return base_delay
+            return self._base_delay * swing_factor
     
     def _play_loop(self):
         """Loop de reproducción del secuenciador"""

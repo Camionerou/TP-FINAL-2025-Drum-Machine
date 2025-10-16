@@ -528,9 +528,9 @@ class DrumMachine:
                 changes = np.abs(values_array - self._last_effects_values)
                 max_change_idx = np.argmax(changes)
                 
-                # Mostrar vista si hay cambio significativo (>2%) o si es la primera vez
+                # Mostrar vista si hay cambio significativo (>5%) o si es la primera vez
                 first_time = not hasattr(self, '_effects_view_shown')
-                if changes[max_change_idx] > 0.02 or first_time:
+                if changes[max_change_idx] > 0.05 or first_time:  # Threshold más alto para reducir procesamiento
                     self._effects_view_shown = True
                     
                     if max_change_idx == 0:  # Pot 0: Compresor
@@ -688,9 +688,9 @@ class DrumMachine:
                 # Actualizar manejador de botones
                 self.button_handler.update(pressed_buttons)
                 
-                # Leer potenciómetros (cada 2 frames para mejor responsividad)
+                # Leer potenciómetros (cada 3 frames para reducir carga de CPU)
                 pot_update_counter += 1
-                if pot_update_counter >= 2:
+                if pot_update_counter >= 3:
                     self._read_potentiometers()
                     pot_update_counter = 0
                 
