@@ -41,45 +41,57 @@ El dispositivo resultante permite a músicos, productores y entusiastas de la el
 
 #### 1.3.2. Evolución del Proyecto: La Travesía Técnica
 
-El desarrollo de este proyecto atravesó **siete fases de evolución** desde su implementación inicial hasta el estado actual optimizado. Cada fase representó una mejora significativa en capacidades, funcionalidades y rendimiento, demostrando la evolución natural de un proyecto de ingeniería musical.
+El desarrollo de este proyecto atravesó **nueve fases de evolución** desde su concepción inicial con Arduino hasta el estado actual optimizado con Raspberry Pi. Cada fase representó una mejora significativa en capacidades, funcionalidades y rendimiento, demostrando la evolución natural de un proyecto de ingeniería musical que comenzó con limitaciones técnicas y evolucionó hacia una solución profesional.
 
 ```mermaid
 timeline
-    title Evolución Real del Proyecto (Basada en Git History)
-    section Fase 1: Implementación Base
+    title Evolución Completa del Proyecto (Desde Arduino hasta RPi)
+    section Fase 1: Arduino Original
+        24 Jul 2025 : Proyecto iniciado con Arduino
+                   : DFPlayer Mini + Arduino UNO/MEGA
+                   : 8 pasos, 4 samples básicos
+                   : Latencia 50-100ms
+                   : Limitaciones de memoria
+    section Fase 2: Migración a Raspberry Pi
+        3 Sep 2025 : Decisión técnica de migración
+                   : Arduino → Raspberry Pi 3 B+
+                   : Procesamiento de audio nativo
+                   : Mayor memoria y velocidad
+                   : Sistema operativo completo
+    section Fase 3: Implementación RPi Base
         12 Oct 2025 : Commit inicial b0b8399
                    : Drum Machine completa funcional
                    : Secuenciador 32 pasos, 8 instrumentos
                    : Display LED 8×32, controles completos
                    : Sistema base operativo
-    section Fase 2: Sistema de Vistas
+    section Fase 4: Sistema de Vistas
         12 Oct 2025 : Commit 7eb824a
                    : ViewManager y ButtonHandler
                    : Sistema de vistas dinámicas
                    : Arquitectura de UI profesional
-    section Fase 3: Optimización UI
+    section Fase 5: Optimización UI
         12 Oct 2025 : Commits 2b94ce1, 80cb933, 6120bbc
                    : Refactorización main.py
                    : Vistas limpias INFO/VOLUMES/PATTERN
                    : Layout horizontal optimizado
-    section Fase 4: Audio Profesional
+    section Fase 6: Audio Profesional
         12 Oct 2025 : Commits 7eea403, fd0f4b6, 5dd01c4
                    : Samples WAV profesionales
                    : Boost ganancia x2
                    : AudioProcessor profesional
-    section Fase 5: Reorganización
+    section Fase 7: Reorganización Modular
         15 Oct 2025 : Commits 6807fcd, 1eb47b9
                    : Estructura modular
                    : Tap Tempo y Bluetooth
                    : Autoarranque systemd
                    : v2.5 profesional
-    section Fase 6: Sistema de Efectos
+    section Fase 8: Sistema de Efectos
         15-16 Oct 2025 : Commits 3098504, 1f322c1, be7c3b8
                        : Efectos master implementados
                        : Reverb, Delay, Compressor, Filter, Saturation
                        : Control mix e intensidad
                        : Vistas individuales
-    section Fase 7: Optimización Final
+    section Fase 9: Optimización Final
         16 Oct 2025 : Commits ce87b5f, a691536, c5f7973
                    : Simplificación a Compresor + EQ
                    : Eliminación completa de lag
@@ -87,7 +99,61 @@ timeline
                    : v3.1 efectos optimizados
 ```
 
-##### **Fase 1: Implementación Base (12 de Octubre de 2025)**
+##### **Fase 1: Arduino Original (24 de Julio de 2025)**
+
+**Proyecto inicial:** "Caja de ritmos" con Arduino
+
+**Características implementadas:**
+- **Secuenciador:** 8 pasos con 4 samples básicos
+- **Audio:** DFPlayer Mini + Arduino UNO/MEGA
+- **Controles:** 8 pulsadores + 8 LEDs + 1 potenciómetro
+- **Samples:** Kick, snare, hi-hat cerrado, hi-hat abierto
+- **Tempo:** 60-180 BPM controlado por potenciómetro
+
+**Limitaciones críticas encontradas:**
+- **Latencia de audio:** 50-100ms inaceptable para aplicaciones musicales
+- **Memoria limitada:** 32KB Flash, 2KB RAM insuficiente
+- **Sin multithreading:** Precisión temporal comprometida
+- **Polifonía limitada:** Solo 1 sample simultáneo
+
+**Especificaciones Fase 1:**
+- Secuenciador: 8 pasos × 4 instrumentos
+- Display: LEDs simples
+- Control: 8 botones + 8 LEDs + 1 pot
+- Audio: DFPlayer Mini + altavoz 3W
+- Latencia: 50-100ms
+- FPS: Variable
+
+##### **Fase 2: Migración a Raspberry Pi (3 de Septiembre de 2025)**
+
+**Decisión técnica:** Migración de Arduino a Raspberry Pi 3 B+
+
+**Motivaciones técnicas:**
+- Procesamiento de audio nativo (sin DFPlayer Mini)
+- Sistema operativo completo (Linux/Raspbian)
+- Multithreading real para precisión temporal
+- Audio integrado (Jack 3.5mm)
+- Mayor memoria y velocidad (1GB RAM, quad-core 1.2GHz)
+
+**Ventajas del cambio:**
+- Latencia: <10ms vs 50-100ms anterior
+- Polifonía ilimitada
+- Secuenciador expandible a 32 pasos
+- Conectividad WiFi y Bluetooth integrados
+- Bibliotecas de audio profesionales (pygame, pydub)
+
+**Componentes eliminados:**
+- ❌ Módulo DFPlayer Mini
+- ❌ Tarjeta microSD para DFPlayer
+- ❌ Amplificador adicional
+
+**Nuevos componentes:**
+- ✅ Raspberry Pi 3 B+
+- ✅ Tarjeta microSD 16GB clase 10
+- ✅ Fuente de alimentación 5V 2.5A
+- ✅ Conversor de nivel lógico 3.3V-5V
+
+##### **Fase 3: Implementación RPi Base (12 de Octubre de 2025)**
 
 **Commit inicial:** b0b8399 - "Initial commit: Raspberry Pi Drum Machine completa"
 
@@ -95,19 +161,19 @@ timeline
 - **Secuenciador:** 32 pasos con 8 instrumentos
 - **Display LED:** Matriz 8×32 con visualización de patrones
 - **Controles:** 16 botones + 8 potenciómetros
-- **Audio:** Sistema de reproducción multicanal
+- **Audio:** Sistema de reproducción multicanal con pygame
 - **Modos:** PAD y SEQUENCER
-- **Polifonía limitada:** Solo 1 sample simultáneo
 
-**Especificaciones Fase 1:**
+**Especificaciones Fase 3:**
 - Secuenciador: 32 pasos × 8 instrumentos
 - Display: Matriz LED 8×32
 - Control: 16 botones + 8 pots + 5 LEDs
 - Audio: Sistema multicanal con pygame
 - Latencia: <10ms
 - FPS: 60 constantes
+- Matriz de botones 4×4
 
-##### **Fase 2: Sistema de Vistas Dinámicas (12 de Octubre de 2025)**
+##### **Fase 4: Sistema de Vistas Dinámicas (12 de Octubre de 2025)**
 
 **Commit:** 7eb824a - "Agregar sistema de vistas dinámicas"
 
@@ -117,15 +183,14 @@ timeline
 - Sistema de renderizado especializado
 - Vistas dinámicas con timeouts automáticos
 
-**Especificaciones Fase 2:**
+**Especificaciones Fase 4:**
 - Secuenciador: 32 pasos × 8 instrumentos
 - Display: Matriz LED 8×32 con vistas dinámicas
 - Control: 16 botones + 8 pots + 5 LEDs
 - Latencia: <10ms
 - FPS: 60 constantes
-- Matriz de botones 4×4
 
-##### **Fase 3: Optimización de UI (12 de Octubre de 2025)**
+##### **Fase 5: Optimización de UI (12 de Octubre de 2025)**
 
 **Commits:** 2b94ce1, 80cb933, 6120bbc - "Refactorizar main.py con sistema completo de vistas"
 
@@ -1016,16 +1081,18 @@ graph LR
 
 **Evolución de características:**
 
-| Característica | Fase 1 | Fase 2 | Fase 3 | Fase 4 | Fase 5 | Fase 6 | Fase 7 |
-|---------------|--------|--------|--------|--------|--------|--------|--------|
-| Pasos secuenciador | 32 | 32 | 32 | 32 | 32 | 32 | 32 |
-| Vistas | Básica | Dinámicas | Optimizadas | Profesionales | Modulares | Efectos | Ultra optimizadas |
-| Eventos de botón | Click | Click/doble | Click/doble/hold | Click/doble/hold | Click/doble/hold | Click/doble/hold | Click/doble/hold |
-| Latencia audio | <10ms | <10ms | <10ms | <10ms | <10ms | <10ms | <2ms |
-| Procesamiento audio | Básico | Básico | Básico | Profesional | Profesional | DSP master | DSP optimizado |
-| Efectos | Ninguno | Ninguno | Ninguno | Ninguno | Ninguno | 5 efectos | 2 efectos optimizados |
-| FPS display | 60 | 60 | 60 | 60 | 60 | 60 | 60 |
-| Arquitectura | Monolítica | Modular UI | UI optimizada | Audio profesional | Modular completa | Efectos master | Ultra optimizada |
+| Característica | Fase 1 | Fase 2 | Fase 3 | Fase 4 | Fase 5 | Fase 6 | Fase 7 | Fase 8 | Fase 9 |
+|---------------|--------|--------|--------|--------|--------|--------|--------|--------|--------|
+| Plataforma | Arduino | Migración | RPi Base | Vistas | UI Opt | Audio Pro | Modular | Efectos | Optimizada |
+| Pasos secuenciador | 8 | 8 | 32 | 32 | 32 | 32 | 32 | 32 | 32 |
+| Instrumentos | 4 | 4 | 8 | 8 | 8 | 8 | 8 | 8 | 8 |
+| Vistas | Básica | Básica | Básica | Dinámicas | Optimizadas | Profesionales | Modulares | Efectos | Ultra optimizadas |
+| Eventos de botón | Click | Click | Click | Click/doble | Click/doble/hold | Click/doble/hold | Click/doble/hold | Click/doble/hold | Click/doble/hold |
+| Latencia audio | 50-100ms | 50-100ms | <10ms | <10ms | <10ms | <10ms | <10ms | <10ms | <2ms |
+| Procesamiento audio | DFPlayer | DFPlayer | Básico | Básico | Básico | Profesional | Profesional | DSP master | DSP optimizado |
+| Efectos | Ninguno | Ninguno | Ninguno | Ninguno | Ninguno | Ninguno | Ninguno | 5 efectos | 2 efectos optimizados |
+| FPS display | Variable | Variable | 60 | 60 | 60 | 60 | 60 | 60 | 60 |
+| Arquitectura | Monolítica | Monolítica | Monolítica | Modular UI | UI optimizada | Audio profesional | Modular completa | Efectos master | Ultra optimizada |
 
 ### 3.5. Desafíos Superados
 
